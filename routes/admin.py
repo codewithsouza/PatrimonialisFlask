@@ -143,3 +143,27 @@ def importar():
 
     flash("Importação realizada com sucesso!", "success")
     return redirect(url_for('admin.clientes_cadastrados'))
+
+
+@bp_admin.route('/editar_cliente/<int:id>', methods=['POST'])
+def editar_cliente(id):
+    data = request.get_json()
+    cliente = Cliente.query.get(id)
+    
+    if not cliente:
+        return jsonify({'success': False, 'message': 'Cliente não encontrado.'}), 404
+
+    # Atualiza os campos do cliente
+    cliente.nome = data.get('nome', cliente.nome)
+    cliente.cnpj = data.get('cnpj', cliente.cnpj)
+    cliente.regime = data.get('regime', cliente.regime)
+    cliente.divida = data.get('divida', cliente.divida)
+    cliente.contrato = data.get('contrato', cliente.contrato)
+    cliente.segmento = data.get('segmento', cliente.segmento)
+
+    try:
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Cliente atualizado com sucesso.'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Erro ao atualizar o cliente: {str(e)}'}), 500

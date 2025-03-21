@@ -24,3 +24,16 @@ def create_app():
 if __name__ == "__main__":
     app = create_app()
     app.run(debug=True)
+
+
+
+def format_real(value):
+    """
+    Formata um valor numérico para o formato de moeda brasileira:
+    Exemplo: 100000.0 -> R$100.000,00
+    """
+    return "R${:,.2f}".format(value).replace(",", "X").replace(".", ",").replace("X", ".")
+
+# Após criar o app
+app = create_app()
+app.jinja_env.filters['real'] = format_real 

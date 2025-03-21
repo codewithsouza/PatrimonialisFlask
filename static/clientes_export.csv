@@ -2,5 +2,7 @@ ID,Nome,CNPJ,Regime,Dívida,Contrato,Segmento
 1,teste,11111111111111,simples,100000.0,Ativo,Prestação de Serviços
 4,ricardo,70347007619,simples,100000.0,Ativo,Comércio
 10,lucas,7232262615156,simples,100.0,ativo,Comércio
-11,mazu,61561515615615615,simples,50000.0,Encerrado,Indústria
+11,mazu,61561515615615615,simples,11.11,Encerrado,Indústria
 12,mkjkooo,1519818498194,simples,90000.0,Encerrado,Transporte
+13,teste,1000,simples,100000.0,Ativo,3º Setor
+16,1561569,1556156156,simples,100000.0,Ativo,Prestação de Serviços

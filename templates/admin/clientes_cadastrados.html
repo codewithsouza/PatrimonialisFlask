@@ -5,27 +5,86 @@
     <h2 class="mt-4">Clientes Cadastrados</h2>
 
     <div class="row mt-4 align-items-end">
-        <!-- Esquerda: Botão de Importar e Adicionar -->
+        <!-- Esquerda: Botões de Importar e Adicionar -->
         <div class="col-md-6 d-flex gap-2">
-            <!-- 🔹 Formulário de Importar CSV/Excel -->
+            <!-- Formulário de Importar CSV/Excel -->
             <form id="formImportar" method="POST" action="{{ url_for('admin.importar') }}" enctype="multipart/form-data">
                 <input type="file" id="inputArquivo" name="file" accept=".xlsx, .csv" hidden required>
-                <label for="inputArquivo" class="btn btn-success w-100" style="min-width: 200px;">
-                    <i class="fas fa-file-import"></i> Importar Excel
+                <label for="inputArquivo" class="btn btn-success" style="min-width: 120px;">
+                    <i class="fas fa-file-import"></i> Importar
                 </label>
             </form>
 
             <!-- Botão de Adicionar Cliente (abre modal) -->
-            <button class="btn btn-primary w-100" style="min-width: 200px;" data-bs-toggle="modal" data-bs-target="#modalAdicionar">
-                <i class="fas fa-plus"></i> Adicionar Cliente
+            <button class="btn btn-primary" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#modalAdicionar">
+                <i class="fas fa-plus"></i> Adicionar
             </button>
         </div>
 
-        <!-- Direita: Pesquisa e Exportar -->
-        <div class="col-md-6 d-flex gap-2 justify-content-end">
+        <!-- Direita: Pesquisa, Filtro e Exportar -->
+        <div class="col-md-6 d-flex gap-2 justify-content-end align-items-center">
             <input type="text" class="form-control" id="searchInput" placeholder="Pesquisar Cliente..." style="max-width: 250px;">
-            <a href="{{ url_for('admin.exportar') }}" class="btn btn-warning w-100" style="min-width: 200px;">
-                <i class="fas fa-file-download"></i> Exportar CSV
+            
+            <!-- Botão de filtro com dropdown -->
+            <div class="btn-group">
+              <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Filtrar">
+                 <i class="fas fa-filter"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end p-3" style="min-width: 250px;">
+                 <!-- Exemplo de filtros (você pode ajustar os valores conforme necessário) -->
+                 <li>
+                   <div class="form-check">
+                      <input class="form-check-input filter-option" type="checkbox" value="Ativo" id="filterAtivo">
+                      <label class="form-check-label" for="filterAtivo">Ativo</label>
+                   </div>
+                 </li>
+                 <li>
+                   <div class="form-check">
+                      <input class="form-check-input filter-option" type="checkbox" value="Encerrado" id="filterEncerrado">
+                      <label class="form-check-label" for="filterEncerrado">Encerrado</label>
+                   </div>
+                 </li>
+                 <li>
+                   <div class="form-check">
+                      <input class="form-check-input filter-option" type="checkbox" value="Comércio" id="filterComercio">
+                      <label class="form-check-label" for="filterComercio">Comércio</label>
+                   </div>
+                 </li>
+                 <li>
+                   <div class="form-check">
+                      <input class="form-check-input filter-option" type="checkbox" value="Prestação de Serviços" id="filterPrestacao">
+                      <label class="form-check-label" for="filterPrestacao">Prestação de Serviços</label>
+                   </div>
+                 </li>
+                 <li>
+                   <div class="form-check">
+                      <input class="form-check-input filter-option" type="checkbox" value="Indústria" id="filterIndustria">
+                      <label class="form-check-label" for="filterIndustria">Indústria</label>
+                   </div>
+                 </li>
+                 <li>
+                   <div class="form-check">
+                      <input class="form-check-input filter-option" type="checkbox" value="Transporte" id="filterTransporte">
+                      <label class="form-check-label" for="filterTransporte">Transporte</label>
+                   </div>
+                 </li>
+                 <li>
+                   <div class="form-check">
+                      <input class="form-check-input filter-option" type="checkbox" value="Rural" id="filterRural">
+                      <label class="form-check-label" for="filterRural">Rural</label>
+                   </div>
+                 </li>
+                 <li>
+                   <div class="form-check">
+                      <input class="form-check-input filter-option" type="checkbox" value="3º Setor" id="filter3Setor">
+                      <label class="form-check-label" for="filter3Setor">3º Setor</label>
+                   </div>
+                 </li>
+              </ul>
+            </div>
+            
+            <a href="{{ url_for('admin.exportar') }}" class="btn btn-warning" style="min-width: 120px;">
+                <i class="fas fa-file-download"></i> Exportar
             </a>
         </div>
     </div>
@@ -47,14 +106,14 @@
             </thead>
             <tbody id="clientesTable">
                 {% for cliente in clientes %}
-                <tr>
+                <tr data-id="{{ cliente.id }}">
                     <td>{{ cliente.id }}</td>
-                    <td>{{ cliente.nome }}</td>
+                    <td class="nome">{{ cliente.nome }}</td>
                     <td class="cnpj">{{ cliente.cnpj }}</td>
-                    <td>{{ cliente.regime }}</td>
-                    <td class="divida">R$ {{ cliente.divida | round(2) }}</td>
-                    <td>{{ cliente.contrato }}</td>  <!-- Corrigido para 'contrato' -->
-                    <td>{{ cliente.segmento }}</td>
+                    <td class="regime">{{ cliente.regime }}</td>
+                    <td class="divida">{{ cliente.divida | real }}</td>
+                    <td class="contrato">{{ cliente.contrato }}</td>
+                    <td class="segmento">{{ cliente.segmento }}</td>
                     <td>
                         <button class="btn btn-warning btn-sm edit-btn" data-id="{{ cliente.id }}">
                             <i class="fas fa-edit"></i>
@@ -84,13 +143,13 @@
                     <input type="text" name="cnpj" class="form-control mb-2" placeholder="CNPJ" required>
                     <input type="text" name="regime" class="form-control mb-2" placeholder="Regime" required>
                     <input type="number" step="0.01" name="divida" class="form-control mb-2" placeholder="Dívida" required>
-
+                    
                     <label for="contrato">Contrato</label>
                     <select name="contrato" class="form-control mb-2" required>
                         <option value="Ativo">Ativo</option>
                         <option value="Encerrado">Encerrado</option>
                     </select>
-
+                    
                     <label for="segmento">Segmento</label>
                     <select name="segmento" class="form-control mb-2" required>
                         <option value="" disabled selected>Escolha um segmento</option>
@@ -101,8 +160,49 @@
                         <option value="Rural">Rural</option>
                         <option value="3º Setor">3º Setor</option>
                     </select>
-
+                    
                     <button type="submit" class="btn btn-primary w-100">Adicionar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Editar Cliente -->
+<div class="modal fade" id="modalEditar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditar">
+                    <!-- Campo oculto para armazenar o ID do cliente -->
+                    <input type="hidden" name="id">
+                    <input type="text" name="nome" class="form-control mb-2" placeholder="Nome" required>
+                    <input type="text" name="cnpj" class="form-control mb-2" placeholder="CNPJ" required>
+                    <input type="text" name="regime" class="form-control mb-2" placeholder="Regime" required>
+                    <input type="number" step="0.01" name="divida" class="form-control mb-2" placeholder="Dívida" required>
+                    
+                    <label for="contrato">Contrato</label>
+                    <select name="contrato" class="form-control mb-2" required>
+                        <option value="Ativo">Ativo</option>
+                        <option value="Encerrado">Encerrado</option>
+                    </select>
+                    
+                    <label for="segmento">Segmento</label>
+                    <select name="segmento" class="form-control mb-2" required>
+                        <option value="" disabled>Escolha um segmento</option>
+                        <option value="Comércio">Comércio</option>
+                        <option value="Prestação de Serviços">Prestação de Serviços</option>
+                        <option value="Indústria">Indústria</option>
+                        <option value="Transporte">Transporte</option>
+                        <option value="Rural">Rural</option>
+                        <option value="3º Setor">3º Setor</option>
+                    </select>
+                    
+                    <button type="submit" class="btn btn-primary w-100">Salvar Alterações</button>
                 </form>
             </div>
         </div>
@@ -111,69 +211,147 @@
 
 <!-- Scripts -->
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        carregarClientes();
+document.addEventListener("DOMContentLoaded", function () {
+    carregarClientes();
 
-        // 🔹 Submeter formulário de adicionar cliente via JSON fetch
-        document.getElementById("formAdicionar").addEventListener("submit", async function (e) {
-            e.preventDefault();
-            let formData = new FormData(this);
-            let clienteData = {
-                nome: formData.get("nome"),
-                cnpj: formData.get("cnpj"),
-                regime: formData.get("regime"),
-                divida: parseFloat(formData.get("divida")),
-                contrato: formData.get("contrato"),
-                segmento: formData.get("segmento"),
-            };
+    // Função de filtro que junta a pesquisa e os filtros selecionados
+    function filterRows() {
+        let searchValue = document.getElementById("searchInput").value.toLowerCase();
+        let selectedFilters = Array.from(document.querySelectorAll('.filter-option:checked'))
+                                    .map(input => input.value.toLowerCase());
+        let rows = document.querySelectorAll("#clientesTable tr");
+        rows.forEach(function (row) {
+            let rowText = row.innerText.toLowerCase();
+            // Verifica se o texto da linha contém o texto da pesquisa
+            let matchesSearch = rowText.indexOf(searchValue) > -1;
+            // Verifica se a linha contém todas as opções de filtro selecionadas
+            let matchesFilters = selectedFilters.every(filter => rowText.indexOf(filter) > -1);
+            row.style.display = (matchesSearch && matchesFilters) ? "" : "none";
+        });
+    }
 
-            let response = await fetch("/admin/adicionar_cliente", {
-                method: "POST",
-                body: JSON.stringify(clienteData),
-                headers: { "Content-Type": "application/json" }
-            });
+    // Eventos para aplicar os filtros
+    document.getElementById("searchInput").addEventListener("keyup", filterRows);
+    document.querySelectorAll('.filter-option').forEach(input => {
+        input.addEventListener("change", filterRows);
+    });
 
-            let result = await response.json();
-            alert(result.message);
+    // Submeter formulário de adicionar cliente via JSON fetch
+    document.getElementById("formAdicionar").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        let formData = new FormData(this);
+        let clienteData = {
+            nome: formData.get("nome"),
+            cnpj: formData.get("cnpj"),
+            regime: formData.get("regime"),
+            divida: parseFloat(formData.get("divida")),
+            contrato: formData.get("contrato"),
+            segmento: formData.get("segmento"),
+        };
 
-            // Recarregar a lista
-            carregarClientes();
-
-            // Fechar o modal
-            let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalAdicionar"));
-            modal.hide();
+        let response = await fetch("/admin/adicionar_cliente", {
+            method: "POST",
+            body: JSON.stringify(clienteData),
+            headers: { "Content-Type": "application/json" }
         });
 
-        // 🔹 Carrega a lista de clientes dinamicamente
-        async function carregarClientes() {
-            let response = await fetch('/admin/clientes_cadastrados');
-            let data = await response.text();
+        let result = await response.json();
+        alert(result.message);
 
-            // Converte a string HTML para um DOM
-            let parser = new DOMParser();
-            let newDoc = parser.parseFromString(data, 'text/html');
+        // Recarregar a lista e aplicar filtros novamente
+        carregarClientes();
+        filterRows();
 
-            // Copia o conteúdo do <tbody id="clientesTable">
-            let newTable = newDoc.getElementById("clientesTable").innerHTML;
-            document.getElementById("clientesTable").innerHTML = newTable;
-        }
+        // Fechar o modal de adicionar
+        let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalAdicionar"));
+        modal.hide();
+    });
 
-        // 🔹 Excluir cliente via JSON fetch
-        document.addEventListener("click", async function (event) {
-            if (event.target.closest(".delete-btn")) {
-                let id = event.target.closest("tr").querySelector("td").innerText;
+    // Submeter formulário de editar cliente via JSON fetch
+    document.getElementById("formEditar").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        let formData = new FormData(this);
+        let clienteData = {
+            id: formData.get("id"),
+            nome: formData.get("nome"),
+            cnpj: formData.get("cnpj"),
+            regime: formData.get("regime"),
+            divida: parseFloat(formData.get("divida")),
+            contrato: formData.get("contrato"),
+            segmento: formData.get("segmento"),
+        };
 
-                if (confirm(`Tem certeza que deseja excluir o cliente ID ${id}?`)) {
-                    let response = await fetch(`/admin/excluir_cliente/${id}`, { method: "POST" });
-                    let result = await response.json();
-                    alert(result.message);
+        let response = await fetch(`/admin/editar_cliente/${clienteData.id}`, {
+            method: "POST",
+            body: JSON.stringify(clienteData),
+            headers: { "Content-Type": "application/json" }
+        });
 
-                    // Recarrega a lista
-                    carregarClientes();
+        let result = await response.json();
+        alert(result.message);
+
+        // Recarregar a lista e aplicar filtros
+        carregarClientes();
+        filterRows();
+
+        // Fechar o modal de editar
+        let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalEditar"));
+        modal.hide();
+    });
+
+    // Função para carregar os clientes na tabela
+    async function carregarClientes() {
+        let response = await fetch('/admin/clientes_cadastrados');
+        let data = await response.text();
+        let parser = new DOMParser();
+        let newDoc = parser.parseFromString(data, 'text/html');
+        let newTable = newDoc.getElementById("clientesTable").innerHTML;
+        document.getElementById("clientesTable").innerHTML = newTable;
+    }
+
+    // Excluir cliente via JSON fetch e remover a linha diretamente
+    document.addEventListener("click", async function (event) {
+        if (event.target.closest(".delete-btn")) {
+            let row = event.target.closest("tr");
+            let id = row.dataset.id;
+            if (confirm(`Tem certeza que deseja excluir o cliente ID ${id}?`)) {
+                let response = await fetch(`/admin/excluir_cliente/${id}`, { method: "POST" });
+                let result = await response.json(); 
+                alert(result.message);
+                if(result.success) {
+                    row.remove();
                 }
             }
-        });
+        }
     });
+
+    // Editar cliente: abrir modal com dados preenchidos
+    document.addEventListener("click", function (event) {
+        if (event.target.closest(".edit-btn")) {
+            let tr = event.target.closest("tr");
+            let id = tr.dataset.id;
+            let nome = tr.querySelector(".nome").innerText;
+            let cnpj = tr.querySelector(".cnpj").innerText;
+            let regime = tr.querySelector(".regime").innerText;
+            let dividaText = tr.querySelector(".divida").innerText;
+            let divida = parseFloat(dividaText.replace("R$ ", "").replace(",", "."));
+            let contrato = tr.querySelector(".contrato").innerText;
+            let segmento = tr.querySelector(".segmento").innerText;
+
+            let formEditar = document.getElementById("formEditar");
+            formEditar.querySelector('input[name="id"]').value = id;
+            formEditar.nome.value = nome;
+            formEditar.cnpj.value = cnpj;
+            formEditar.regime.value = regime;
+            formEditar.divida.value = divida;
+            formEditar.contrato.value = contrato;
+            formEditar.segmento.value = segmento;
+
+            let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalEditar"));
+            modal.show();
+        }
+    });
+});
 </script>
 
 {% endblock %}
