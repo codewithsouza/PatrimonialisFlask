@@ -1,35 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clientes Cadastrados</title>
-</head>
-<body>
-    {% extends 'admin/index.html' %}
+{% extends 'admin/index.html' %}
 
 {% block content %}
-
 <div class="container">
     <h2 class="mt-4">Clientes Cadastrados</h2>
 
-    <div class="d-flex justify-content-between mt-3 align-items-center flex-wrap">
-        <div class="d-flex gap-2">
-            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalImportar">
-                <i class="fas fa-file-import"></i> Importar
-            </button>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAdicionar">
-                <i class="fas fa-plus"></i> Adicionar
+    <div class="row mt-4 align-items-end">
+        <!-- Esquerda: Botão de Importar e Adicionar -->
+        <div class="col-md-6 d-flex gap-2">
+            <!-- 🔹 Formulário de Importar CSV/Excel -->
+            <form id="formImportar" method="POST" action="{{ url_for('admin.importar') }}" enctype="multipart/form-data">
+                <input type="file" id="inputArquivo" name="file" accept=".xlsx, .csv" hidden required>
+                <label for="inputArquivo" class="btn btn-success w-100" style="min-width: 200px;">
+                    <i class="fas fa-file-import"></i> Importar Excel
+                </label>
+            </form>
+
+            <!-- Botão de Adicionar Cliente (abre modal) -->
+            <button class="btn btn-primary w-100" style="min-width: 200px;" data-bs-toggle="modal" data-bs-target="#modalAdicionar">
+                <i class="fas fa-plus"></i> Adicionar Cliente
             </button>
         </div>
-        <div class="d-flex gap-2">
+
+        <!-- Direita: Pesquisa e Exportar -->
+        <div class="col-md-6 d-flex gap-2 justify-content-end">
             <input type="text" class="form-control" id="searchInput" placeholder="Pesquisar Cliente..." style="max-width: 250px;">
-            <a href="{{ url_for('admin.exportar') }}" class="btn btn-warning">
+            <a href="{{ url_for('admin.exportar') }}" class="btn btn-warning w-100" style="min-width: 200px;">
                 <i class="fas fa-file-download"></i> Exportar CSV
             </a>
         </div>
     </div>
 
+    <!-- Tabela de Clientes -->
     <div class="table-responsive">
         <table class="table table-hover mt-4">
             <thead class="table-dark">
@@ -39,7 +40,8 @@
                     <th>CNPJ</th>
                     <th>Regime</th>
                     <th>Dívida</th>
-                    <th>Cobrança</th>
+                    <th>Contrato</th>
+                    <th>Segmento</th>
                     <th>Ações</th>
                 </tr>
             </thead>
@@ -48,36 +50,23 @@
                 <tr>
                     <td>{{ cliente.id }}</td>
                     <td>{{ cliente.nome }}</td>
-                    <td>{{ cliente.cnpj }}</td>
+                    <td class="cnpj">{{ cliente.cnpj }}</td>
                     <td>{{ cliente.regime }}</td>
-                    <td>{{ cliente.divida }}</td>
-                    <td>{{ cliente.cobranca }}</td>
+                    <td class="divida">R$ {{ cliente.divida | round(2) }}</td>
+                    <td>{{ cliente.contrato }}</td>  <!-- Corrigido para 'contrato' -->
+                    <td>{{ cliente.segmento }}</td>
                     <td>
-                        <button class="btn btn-warning btn-sm edit-btn"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-danger btn-sm delete-btn"><i class="fas fa-trash-alt"></i></button>
+                        <button class="btn btn-warning btn-sm edit-btn" data-id="{{ cliente.id }}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm delete-btn" data-id="{{ cliente.id }}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-    </div>
-</div>
-
-<!-- Modal de Importar Clientes -->
-<div class="modal fade" id="modalImportar" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Importar Clientes</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form action="{{ url_for('admin.importar') }}" method="post" enctype="multipart/form-data">
-                    <input type="file" name="file" accept=".csv, .xlsx" class="form-control mb-3">
-                    <button type="submit" class="btn btn-success w-100">Importar</button>
-                </form>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -90,12 +79,29 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="formAdicionarCliente">
-                    <input type="text" id="nome" class="form-control mb-2" placeholder="Nome" required>
-                    <input type="text" id="cnpj" class="form-control mb-2" placeholder="CNPJ" required>
-                    <input type="text" id="regime" class="form-control mb-2" placeholder="Regime" required>
-                    <input type="text" id="divida" class="form-control mb-2" placeholder="Dívida" required>
-                    <input type="text" id="cobranca" class="form-control mb-2" placeholder="Cobrança" required>
+                <form id="formAdicionar">
+                    <input type="text" name="nome" class="form-control mb-2" placeholder="Nome" required>
+                    <input type="text" name="cnpj" class="form-control mb-2" placeholder="CNPJ" required>
+                    <input type="text" name="regime" class="form-control mb-2" placeholder="Regime" required>
+                    <input type="number" step="0.01" name="divida" class="form-control mb-2" placeholder="Dívida" required>
+
+                    <label for="contrato">Contrato</label>
+                    <select name="contrato" class="form-control mb-2" required>
+                        <option value="Ativo">Ativo</option>
+                        <option value="Encerrado">Encerrado</option>
+                    </select>
+
+                    <label for="segmento">Segmento</label>
+                    <select name="segmento" class="form-control mb-2" required>
+                        <option value="" disabled selected>Escolha um segmento</option>
+                        <option value="Comércio">Comércio</option>
+                        <option value="Prestação de Serviços">Prestação de Serviços</option>
+                        <option value="Indústria">Indústria</option>
+                        <option value="Transporte">Transporte</option>
+                        <option value="Rural">Rural</option>
+                        <option value="3º Setor">3º Setor</option>
+                    </select>
+
                     <button type="submit" class="btn btn-primary w-100">Adicionar</button>
                 </form>
             </div>
@@ -103,50 +109,71 @@
     </div>
 </div>
 
-<!-- JavaScript -->
+<!-- Scripts -->
 <script>
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-        let input = this.value.toLowerCase();
-        let rows = document.querySelectorAll('#clientesTable tr');
+    document.addEventListener("DOMContentLoaded", function () {
+        carregarClientes();
 
-        rows.forEach(row => {
-            let text = row.innerText.toLowerCase();
-            row.style.display = text.includes(input) ? '' : 'none';
+        // 🔹 Submeter formulário de adicionar cliente via JSON fetch
+        document.getElementById("formAdicionar").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            let formData = new FormData(this);
+            let clienteData = {
+                nome: formData.get("nome"),
+                cnpj: formData.get("cnpj"),
+                regime: formData.get("regime"),
+                divida: parseFloat(formData.get("divida")),
+                contrato: formData.get("contrato"),
+                segmento: formData.get("segmento"),
+            };
+
+            let response = await fetch("/admin/adicionar_cliente", {
+                method: "POST",
+                body: JSON.stringify(clienteData),
+                headers: { "Content-Type": "application/json" }
+            });
+
+            let result = await response.json();
+            alert(result.message);
+
+            // Recarregar a lista
+            carregarClientes();
+
+            // Fechar o modal
+            let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalAdicionar"));
+            modal.hide();
         });
-    });
 
-    // Adicionar cliente dinamicamente
-    document.getElementById("formAdicionarCliente").addEventListener("submit", function(event) {
-        event.preventDefault();
+        // 🔹 Carrega a lista de clientes dinamicamente
+        async function carregarClientes() {
+            let response = await fetch('/admin/clientes_cadastrados');
+            let data = await response.text();
 
-        let nome = document.getElementById("nome").value;
-        let cnpj = document.getElementById("cnpj").value;
-        let regime = document.getElementById("regime").value;
-        let divida = document.getElementById("divida").value;
-        let cobranca = document.getElementById("cobranca").value;
+            // Converte a string HTML para um DOM
+            let parser = new DOMParser();
+            let newDoc = parser.parseFromString(data, 'text/html');
 
-        let newRow = `
-            <tr>
-                <td>#</td>
-                <td>${nome}</td>
-                <td>${cnpj}</td>
-                <td>${regime}</td>
-                <td>${divida}</td>
-                <td>${cobranca}</td>
-                <td>
-                    <button class="btn btn-warning btn-sm edit-btn"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-danger btn-sm delete-btn"><i class="fas fa-trash-alt"></i></button>
-                </td>
-            </tr>
-        `;
+            // Copia o conteúdo do <tbody id="clientesTable">
+            let newTable = newDoc.getElementById("clientesTable").innerHTML;
+            document.getElementById("clientesTable").innerHTML = newTable;
+        }
 
-        document.getElementById("clientesTable").insertAdjacentHTML("beforeend", newRow);
-        document.getElementById("formAdicionarCliente").reset();
-        new bootstrap.Modal(document.getElementById("modalAdicionar")).hide();
+        // 🔹 Excluir cliente via JSON fetch
+        document.addEventListener("click", async function (event) {
+            if (event.target.closest(".delete-btn")) {
+                let id = event.target.closest("tr").querySelector("td").innerText;
+
+                if (confirm(`Tem certeza que deseja excluir o cliente ID ${id}?`)) {
+                    let response = await fetch(`/admin/excluir_cliente/${id}`, { method: "POST" });
+                    let result = await response.json();
+                    alert(result.message);
+
+                    // Recarrega a lista
+                    carregarClientes();
+                }
+            }
+        });
     });
 </script>
 
 {% endblock %}
-
-</body>
-</html>
