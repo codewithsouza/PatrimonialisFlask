@@ -1,37 +1,66 @@
-# 🧾 Sistema de Gerenciamento de Clientes com Flask
+ 🧑‍💼 Sistema de Gerenciamento de Clientes com Flask
 
-Este é um sistema web desenvolvido com **Flask** e **MySQL** que permite o gerenciamento de clientes de forma segura e individual para cada administrador. Cada usuário tem acesso apenas aos seus próprios registros, garantindo privacidade e organização.
+Este é um sistema web completo desenvolvido com *Flask* e *MySQL, focado no gerenciamento de clientes por múltiplos administradores com **acesso individualizado* e seguro. A plataforma oferece uma interface amigável e recursos úteis para o controle de dados empresariais.
+
+> 🔐 Cada administrador visualiza apenas seus próprios clientes.
 
 ---
 
-## 🚀 Funcionalidades
+## ✨ Funcionalidades
 
-- ✅ Cadastro e login de administradores
-- ✅ Hash de senha com segurança (Werkzeug)
-- ✅ Tela principal com total de clientes
+- ✅ Cadastro e login de administradores com segurança (hash de senha)
+- ✅ Painel administrativo com contadores e gráficos
 - ✅ Adição, edição e exclusão de clientes
-- ✅ Visualização detalhada por modal
+- ✅ Visualização detalhada via modal
 - ✅ Exportação de dados para CSV
-- ✅ Filtros dinâmicos e busca em tempo real
-- ✅ Acesso restrito por `usuario_id`
+- ✅ Busca em tempo real e filtros dinâmicos
+- ✅ Controle de acesso com usuario_id
 
 ---
 
-## 💻 Tecnologias Utilizadas
+## 🖥️ Interface do Sistema
 
-- **Python** (Flask, Flask-Login, SQLAlchemy)
-- **MySQL** (com PyMySQL)
-- **HTML5 + CSS3 (Bootstrap 5)**
-- **JavaScript Vanilla**
-- **Pandas** (para exportação de CSV)
+### 🔐 Login Admin
+![Login](imagens/pagina_login.jfif)
+
+### 📝 Criar Conta
+![Criar Conta](images/pagina_criar_conta.jfif)
+
+### 🏠 Dashboard
+![Dashboard](imagens/dashboard_administrativo.jfif)
+
+### ➕ Adicionar Cliente
+![Adicionar Cliente](imagens/adicionar_clientes.jfif)
+
+### 📋 Clientes Cadastrados
+![Clientes Cadastrados](imagens/clientes_cadastrados.jfif)
+
+### 🔎 Visualizar Detalhes
+![Detalhes do Cliente](imagens/detalhes_clientes.jfif)
+
+> 📂 Todas as imagens devem ser adicionadas na pasta images/ do seu repositório (ou ajuste os caminhos conforme preferir).
 
 ---
 
-## 🔐 Multiusuário com Acesso Individual
+## 🛠️ Tecnologias Utilizadas
 
-Cada administrador tem um painel exclusivo. Isso é feito através do campo `usuario_id` nos registros de clientes, vinculado ao `current_user.id` de cada usuário logado.
+- *Python* – Flask, Flask-Login, SQLAlchemy
+- *MySQL* – com integração via PyMySQL
+- *HTML5 + CSS3* – usando Bootstrap 5
+- *JavaScript Vanilla*
+- *Pandas* – exportação de dados em CSV
 
 ---
 
-## 🏗️ Estrutura do Projeto
+## 🔒 Multiusuário com Acesso Restrito
 
+O sistema utiliza autenticação com Flask-Login. Cada cliente é vinculado ao usuario_id, associado ao current_user.id. Assim, os administradores acessam apenas os registros que eles mesmos criaram.
+
+---
+
+## 🚀 Como Executar Localmente
+
+1. Clone este repositório:
+```bash
+git clone https://github.com/seu-usuario/seu-repositorio.git
+cd seu-repositorio
