@@ -1,3 +1,4 @@
+<!-- login_admin.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -5,14 +6,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Página de Login</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-
-
 
     <style>
         * {
@@ -55,6 +52,20 @@
 </head>
 
 <body>
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mt-3">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
     <section class="vh-100">
         <div class="container py-5 h-100">
             <div class="row d-flex align-items-center justify-content-center h-100">
@@ -63,8 +74,7 @@
                         class="img-fluid" alt="Phone image">
                 </div>
                 <div class="col-md-5 col-lg-4 col-xl-3 offset-xl-1">
-                    <!-- 🔹 Agora o formulário envia para a rota de login do Flask -->
-                    <form method="POST" action="{{ url_for('admin.login_admin') }}">
+                    <form method="POST" action="{{ url_for('auth.login') }}">
                         <h3 class="text-center">LOGIN ADMIN</h3>
 
                         <label class="form-label" for="email">Endereço de e-mail</label>
@@ -73,10 +83,10 @@
                                 required />
                         </div>
 
-                        <label class="form-label" for="password">Senha</label>
+                        <label class="form-label" for="senha">Senha</label>
                         <div class="form-outline mb-3">
-                            <input type="password" id="password" name="password"
-                                class="form-control form-control-lg readable" required />
+                            <input type="password" id="senha" name="senha" class="form-control form-control-lg readable"
+                                required />
                         </div>
 
                         <div class="login-actions">
@@ -90,19 +100,17 @@
                             <button type="submit" class="btn btn-primary btn-lg btn-block">Entrar</button>
                         </div>
                         <div class="account-text text-center mt-3">
-                            <div class="text-center mt-3">
-                                <a href="{{ url_for('auth.cadastro') }}" class="text-primary text-decoration-underline">
-                                    Criar Conta
-                                </a>
-                            </div>
-                        </div>                
+                            <a href="{{ url_for('auth.cadastro') }}" class="text-primary text-decoration-underline">
+                                Criar Conta
+                            </a>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </section>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
 </body>
 
 </html>

@@ -2,355 +2,536 @@
 
 {% block content %}
 <div class="container">
-    <h2 class="mt-4">Clientes Cadastrados</h2>
+  <h2 class="mt-4">Clientes Cadastrados</h2>
 
-    <div class="row mt-4 align-items-end">
-        <!-- Esquerda: Botões de Importar e Adicionar -->
-        <div class="col-md-6 d-flex gap-2">
-            <!-- Formulário de Importar CSV/Excel -->
-            <form id="formImportar" method="POST" action="{{ url_for('admin.importar') }}" enctype="multipart/form-data">
-                <input type="file" id="inputArquivo" name="file" accept=".xlsx, .csv" hidden required>
-                <label for="inputArquivo" class="btn btn-success" style="min-width: 120px;">
-                    <i class="fas fa-file-import"></i> Importar
-                </label>
-            </form>
+  <div class="row mt-4 align-items-end">
+    <!-- Esquerda: Botões de Importar e Adicionar -->
+    <div class="col-md-6 d-flex gap-2">
+      <form id="formImportar" method="POST" action="{{ url_for('admin.importar') }}" enctype="multipart/form-data">
+        <input type="file" id="inputArquivo" name="file" accept=".xlsx, .csv" hidden required>
+        <label for="inputArquivo" class="btn btn-success" style="min-width: 120px;">
+          <i class="fas fa-file-import"></i> Importar
+        </label>
+      </form>
+      <button class="btn btn-primary" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#modalAdicionar">
+        <i class="fas fa-plus"></i> Adicionar
+      </button>
+    </div>
 
-            <!-- Botão de Adicionar Cliente (abre modal) -->
-            <button class="btn btn-primary" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#modalAdicionar">
-                <i class="fas fa-plus"></i> Adicionar
+    <!-- Direita: Pesquisa, Filtro e Exportar -->
+    <div class="col-md-6 d-flex gap-2 justify-content-end align-items-center">
+      <input type="text" class="form-control" id="searchInput" placeholder="Pesquisar Cliente..." style="max-width: 250px;">
+      <div class="btn-group">
+        <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Filtrar">
+          <i class="fas fa-filter"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end p-3" style="min-width: 250px;">
+          <li>
+            <div class="form-check">
+              <input class="form-check-input filter-option" type="checkbox" value="Ativo" id="filterAtivo">
+              <label class="form-check-label" for="filterAtivo">Ativo</label>
+            </div>
+          </li>
+          <li>
+            <div class="form-check">
+              <input class="form-check-input filter-option" type="checkbox" value="Encerrado" id="filterEncerrado">
+              <label class="form-check-label" for="filterEncerrado">Encerrado</label>
+            </div>
+          </li>
+          <li>
+            <div class="form-check">
+              <input class="form-check-input filter-option" type="checkbox" value="Comércio" id="filterComercio">
+              <label class="form-check-label" for="filterComercio">Comércio</label>
+            </div>
+          </li>
+          <li>
+            <div class="form-check">
+              <input class="form-check-input filter-option" type="checkbox" value="Prestação de Serviços" id="filterPrestacao">
+              <label class="form-check-label" for="filterPrestacao">Prestação de Serviços</label>
+            </div>
+          </li>
+          <li>
+            <div class="form-check">
+              <input class="form-check-input filter-option" type="checkbox" value="Indústria" id="filterIndustria">
+              <label class="form-check-label" for="filterIndustria">Indústria</label>
+            </div>
+          </li>
+          <li>
+            <div class="form-check">
+              <input class="form-check-input filter-option" type="checkbox" value="Transporte" id="filterTransporte">
+              <label class="form-check-label" for="filterTransporte">Transporte</label>
+            </div>
+          </li>
+          <li>
+            <div class="form-check">
+              <input class="form-check-input filter-option" type="checkbox" value="Rural" id="filterRural">
+              <label class="form-check-label" for="filterRural">Rural</label>
+            </div>
+          </li>
+          <li>
+            <div class="form-check">
+              <input class="form-check-input filter-option" type="checkbox" value="3º Setor" id="filter3Setor">
+              <label class="form-check-label" for="filter3Setor">3º Setor</label>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <a href="{{ url_for('admin.exportar') }}" class="btn btn-warning" style="min-width: 120px;">
+        <i class="fas fa-file-download"></i> Exportar
+      </a>
+    </div>
+  </div>
+
+  <!-- Tabela de Clientes -->
+  <div class="table-responsive">
+    <table class="table table-hover mt-4">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Nome</th>
+          <th>CNPJ</th>
+          <th>Regime</th>
+          <th>Dívida</th>
+          <th>Contrato</th>
+          <th>Segmento</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="clientesTable">
+        {% for cliente in clientes %}
+        <tr data-id="{{ cliente.id }}"
+            data-logradouro="{{ cliente.logradouro }}"
+            data-numero="{{ cliente.numero }}"
+            data-bairro="{{ cliente.bairro }}"
+            data-municipio="{{ cliente.municipio }}"
+            data-email="{{ cliente.email }}"
+            data-telefone="{{ cliente.telefone }}"
+            data-cep="{{ cliente.cep }}"
+            data-monitoramento="{{ cliente.monitoramento }}"
+            data-data_monitoramento="{{ cliente.data_monitoramento }}"
+            data-situacao_fiscal="{{ cliente.situacao_fiscal }}"
+            data-observacoes="{{ cliente.observacoes }}">
+          <td>{{ cliente.id }}</td>
+          <td class="nome">{{ cliente.nome }}</td>
+          <td class="cnpj">{{ cliente.cnpj }}</td>
+          <td class="regime">{{ cliente.regime }}</td>
+          <td class="divida">R$ {{ '{:,.2f}'.format(cliente.divida).replace(',', 'v').replace('.', ',').replace('v', '.') }}</td>
+          <td class="contrato">{{ cliente.contrato }}</td>
+          <td class="segmento">{{ cliente.segmento }}</td>
+          <td>
+            <button class="btn btn-info btn-sm view-btn" data-id="{{ cliente.id }}">
+              <i class="fas fa-eye"></i>
             </button>
-        </div>
-
-        <!-- Direita: Pesquisa, Filtro e Exportar -->
-        <div class="col-md-6 d-flex gap-2 justify-content-end align-items-center">
-            <input type="text" class="form-control" id="searchInput" placeholder="Pesquisar Cliente..." style="max-width: 250px;">
-            
-            <!-- Botão de filtro com dropdown -->
-            <div class="btn-group">
-              <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Filtrar">
-                 <i class="fas fa-filter"></i>
-              </button>
-              <ul class="dropdown-menu dropdown-menu-end p-3" style="min-width: 250px;">
-                 <!-- Exemplo de filtros (você pode ajustar os valores conforme necessário) -->
-                 <li>
-                   <div class="form-check">
-                      <input class="form-check-input filter-option" type="checkbox" value="Ativo" id="filterAtivo">
-                      <label class="form-check-label" for="filterAtivo">Ativo</label>
-                   </div>
-                 </li>
-                 <li>
-                   <div class="form-check">
-                      <input class="form-check-input filter-option" type="checkbox" value="Encerrado" id="filterEncerrado">
-                      <label class="form-check-label" for="filterEncerrado">Encerrado</label>
-                   </div>
-                 </li>
-                 <li>
-                   <div class="form-check">
-                      <input class="form-check-input filter-option" type="checkbox" value="Comércio" id="filterComercio">
-                      <label class="form-check-label" for="filterComercio">Comércio</label>
-                   </div>
-                 </li>
-                 <li>
-                   <div class="form-check">
-                      <input class="form-check-input filter-option" type="checkbox" value="Prestação de Serviços" id="filterPrestacao">
-                      <label class="form-check-label" for="filterPrestacao">Prestação de Serviços</label>
-                   </div>
-                 </li>
-                 <li>
-                   <div class="form-check">
-                      <input class="form-check-input filter-option" type="checkbox" value="Indústria" id="filterIndustria">
-                      <label class="form-check-label" for="filterIndustria">Indústria</label>
-                   </div>
-                 </li>
-                 <li>
-                   <div class="form-check">
-                      <input class="form-check-input filter-option" type="checkbox" value="Transporte" id="filterTransporte">
-                      <label class="form-check-label" for="filterTransporte">Transporte</label>
-                   </div>
-                 </li>
-                 <li>
-                   <div class="form-check">
-                      <input class="form-check-input filter-option" type="checkbox" value="Rural" id="filterRural">
-                      <label class="form-check-label" for="filterRural">Rural</label>
-                   </div>
-                 </li>
-                 <li>
-                   <div class="form-check">
-                      <input class="form-check-input filter-option" type="checkbox" value="3º Setor" id="filter3Setor">
-                      <label class="form-check-label" for="filter3Setor">3º Setor</label>
-                   </div>
-                 </li>
-              </ul>
-            </div>
-            
-            <a href="{{ url_for('admin.exportar') }}" class="btn btn-warning" style="min-width: 120px;">
-                <i class="fas fa-file-download"></i> Exportar
-            </a>
-        </div>
-    </div>
-
-    <!-- Tabela de Clientes -->
-    <div class="table-responsive">
-        <table class="table table-hover mt-4">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>CNPJ</th>
-                    <th>Regime</th>
-                    <th>Dívida</th>
-                    <th>Contrato</th>
-                    <th>Segmento</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody id="clientesTable">
-                {% for cliente in clientes %}
-                <tr data-id="{{ cliente.id }}">
-                    <td>{{ cliente.id }}</td>
-                    <td class="nome">{{ cliente.nome }}</td>
-                    <td class="cnpj">{{ cliente.cnpj }}</td>
-                    <td class="regime">{{ cliente.regime }}</td>
-                    <td class="divida">{{ cliente.divida | real }}</td>
-                    <td class="contrato">{{ cliente.contrato }}</td>
-                    <td class="segmento">{{ cliente.segmento }}</td>
-                    <td>
-                        <button class="btn btn-warning btn-sm edit-btn" data-id="{{ cliente.id }}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-danger btn-sm delete-btn" data-id="{{ cliente.id }}">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+            <button class="btn btn-warning btn-sm edit-btn" data-id="{{ cliente.id }}">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger btn-sm delete-btn" data-id="{{ cliente.id }}">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
-<!-- Modal de Adicionar Cliente -->
+<!-- Modal de Adicionar Cliente com aparência de janela -->
 <div class="modal fade" id="modalAdicionar" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Adicionar Cliente</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formAdicionar">
-                    <input type="text" name="nome" class="form-control mb-2" placeholder="Nome" required>
-                    <input type="text" name="cnpj" class="form-control mb-2" placeholder="CNPJ" required>
-                    <input type="text" name="regime" class="form-control mb-2" placeholder="Regime" required>
-                    <input type="number" step="0.01" name="divida" class="form-control mb-2" placeholder="Dívida" required>
-                    
-                    <label for="contrato">Contrato</label>
-                    <select name="contrato" class="form-control mb-2" required>
-                        <option value="Ativo">Ativo</option>
-                        <option value="Encerrado">Encerrado</option>
-                    </select>
-                    
-                    <label for="segmento">Segmento</label>
-                    <select name="segmento" class="form-control mb-2" required>
-                        <option value="" disabled selected>Escolha um segmento</option>
-                        <option value="Comércio">Comércio</option>
-                        <option value="Prestação de Serviços">Prestação de Serviços</option>
-                        <option value="Indústria">Indústria</option>
-                        <option value="Transporte">Transporte</option>
-                        <option value="Rural">Rural</option>
-                        <option value="3º Setor">3º Setor</option>
-                    </select>
-                    
-                    <button type="submit" class="btn btn-primary w-100">Adicionar</button>
-                </form>
-            </div>
-        </div>
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 1200px; width: 100%;">
+    <div class="modal-content" style="height: 80vh;">
+      <div class="modal-header">
+        <h5 class="modal-title">Adicionar Cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="overflow-y: auto;">
+        <form id="formAdicionar">
+          <!-- Campos básicos -->
+          <input type="text" name="nome" class="form-control mb-2" placeholder="Nome" required>
+          <input type="text" name="cnpj" class="form-control mb-2" placeholder="CNPJ" required>
+          <input type="text" name="regime" class="form-control mb-2" placeholder="Regime" required>
+          <input type="number" step="0.01" name="divida" class="form-control mb-2" placeholder="Dívida" required>
+          
+          <label for="contrato">Contrato</label>
+          <select name="contrato" class="form-control mb-2" required>
+            <option value="Ativo">Ativo</option>
+            <option value="Encerrado">Encerrado</option>
+          </select>
+          
+          <label for="segmento">Segmento</label>
+          <select name="segmento" class="form-control mb-2" required>
+            <option value="" disabled selected>Escolha um segmento</option>
+            <option value="Comércio">Comércio</option>
+            <option value="Prestação de Serviços">Prestação de Serviços</option>
+            <option value="Indústria">Indústria</option>
+            <option value="Transporte">Transporte</option>
+            <option value="Rural">Rural</option>
+            <option value="3º Setor">3º Setor</option>
+          </select>
+  
+          <!-- Campos extras já existentes -->
+          <hr>
+          <h6>Informações Adicionais</h6>
+          <input type="text" name="logradouro" class="form-control mb-2" placeholder="Logradouro" required>
+          <input type="text" name="numero" class="form-control mb-2" placeholder="Número" required>
+          <input type="text" name="bairro" class="form-control mb-2" placeholder="Bairro" required>
+          <input type="text" name="municipio" class="form-control mb-2" placeholder="Município" required>
+          <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
+          <input type="text" name="telefone" class="form-control mb-2" placeholder="Telefone" required>
+          <input type="text" name="cep" class="form-control mb-2" placeholder="CEP" required>
+  
+          <!-- Novos campos -->
+          <hr>
+          <h6>Novas Informações</h6>
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" name="monitoramento" id="monitoramento">
+            <label class="form-check-label" for="monitoramento">Cliente em Monitoramento?</label>
+          </div>
+          <div id="divDataMonitoramento" style="display: none;">
+            <label for="data_monitoramento">Data do Monitoramento</label>
+            <input type="date" name="data_monitoramento" class="form-control mb-2" id="data_monitoramento">
+          </div>
+          <input type="text" name="situacao_fiscal" class="form-control mb-2" placeholder="Situação Fiscal">
+          <textarea name="observacoes" class="form-control mb-2" placeholder="Observações" rows="3"></textarea>
+  
+          <button type="submit" class="btn btn-primary w-100">Adicionar</button>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
-
-<!-- Modal de Editar Cliente -->
+  
+<!-- Modal de Editar Cliente (com os novos campos) -->
 <div class="modal fade" id="modalEditar" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Editar Cliente</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formEditar">
-                    <!-- Campo oculto para armazenar o ID do cliente -->
-                    <input type="hidden" name="id">
-                    <input type="text" name="nome" class="form-control mb-2" placeholder="Nome" required>
-                    <input type="text" name="cnpj" class="form-control mb-2" placeholder="CNPJ" required>
-                    <input type="text" name="regime" class="form-control mb-2" placeholder="Regime" required>
-                    <input type="number" step="0.01" name="divida" class="form-control mb-2" placeholder="Dívida" required>
-                    
-                    <label for="contrato">Contrato</label>
-                    <select name="contrato" class="form-control mb-2" required>
-                        <option value="Ativo">Ativo</option>
-                        <option value="Encerrado">Encerrado</option>
-                    </select>
-                    
-                    <label for="segmento">Segmento</label>
-                    <select name="segmento" class="form-control mb-2" required>
-                        <option value="" disabled>Escolha um segmento</option>
-                        <option value="Comércio">Comércio</option>
-                        <option value="Prestação de Serviços">Prestação de Serviços</option>
-                        <option value="Indústria">Indústria</option>
-                        <option value="Transporte">Transporte</option>
-                        <option value="Rural">Rural</option>
-                        <option value="3º Setor">3º Setor</option>
-                    </select>
-                    
-                    <button type="submit" class="btn btn-primary w-100">Salvar Alterações</button>
-                </form>
-            </div>
-        </div>
+  <div class="modal-dialog modal-xl" style="max-width: 90%;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formEditar">
+          <input type="hidden" name="id">
+          <!-- Campos básicos -->
+          <input type="text" name="nome" class="form-control mb-2" placeholder="Nome" required>
+          <input type="text" name="cnpj" class="form-control mb-2" placeholder="CNPJ" required>
+          <input type="text" name="regime" class="form-control mb-2" placeholder="Regime" required>
+          <input type="number" step="0.01" name="divida" class="form-control mb-2" placeholder="Dívida" required>
+          
+          <!-- Exibe Situação Fiscal antes de Contrato -->
+          <label for="situacao_fiscal">Situação Fiscal</label>
+          <input type="text" name="situacao_fiscal" class="form-control mb-2" placeholder="Situação Fiscal">
+  
+          <label for="contrato">Contrato</label>
+          <select name="contrato" class="form-control mb-2" required>
+            <option value="Ativo">Ativo</option>
+            <option value="Encerrado">Encerrado</option>
+          </select>
+          
+          <label for="segmento">Segmento</label>
+          <select name="segmento" class="form-control mb-2" required>
+            <option value="" disabled>Escolha um segmento</option>
+            <option value="Comércio">Comércio</option>
+            <option value="Prestação de Serviços">Prestação de Serviços</option>
+            <option value="Indústria">Indústria</option>
+            <option value="Transporte">Transporte</option>
+            <option value="Rural">Rural</option>
+            <option value="3º Setor">3º Setor</option>
+          </select>
+  
+          <!-- Campos extras já existentes -->
+          <hr>
+          <h6>Informações Adicionais</h6>
+          <input type="text" name="logradouro" class="form-control mb-2" placeholder="Logradouro" required>
+          <input type="text" name="numero" class="form-control mb-2" placeholder="Número" required>
+          <input type="text" name="bairro" class="form-control mb-2" placeholder="Bairro" required>
+          <input type="text" name="municipio" class="form-control mb-2" placeholder="Município" required>
+          <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
+          <input type="text" name="telefone" class="form-control mb-2" placeholder="Telefone" required>
+          <input type="text" name="cep" class="form-control mb-2" placeholder="CEP" required>
+  
+          <!-- Novos campos -->
+          <hr>
+          <h6>Novas Informações</h6>
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" name="monitoramento" id="monitoramento_edit">
+            <label class="form-check-label" for="monitoramento_edit">Cliente em Monitoramento?</label>
+          </div>
+          <div id="divDataMonitoramento_edit" style="display: none;">
+            <label for="data_monitoramento_edit">Data do Monitoramento</label>
+            <input type="date" name="data_monitoramento" class="form-control mb-2" id="data_monitoramento_edit">
+          </div>
+          <textarea name="observacoes" class="form-control mb-2" placeholder="Observações" rows="3"></textarea>
+  
+          <button type="submit" class="btn btn-primary w-100">Salvar Alterações</button>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
-
+  
+<!-- Modal de Visualizar Cliente (apenas leitura) com informações extras -->
+<div class="modal fade" id="modalVisualizar" tabindex="-1">
+  <div class="modal-dialog modal-xl" style="max-width: 90%;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detalhes do Cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Campos básicos -->
+        <div class="mb-2"><strong>Nome:</strong> <span id="viewNome"></span></div>
+        <div class="mb-2"><strong>CNPJ:</strong> <span id="viewCNPJ"></span></div>
+        <div class="mb-2"><strong>Regime:</strong> <span id="viewRegime"></span></div>
+        <div class="mb-2"><strong>Situação Fiscal:</strong> <span id="viewSituacaoFiscal"></span></div>
+        <div class="mb-2"><strong>Contrato:</strong> <span id="viewContrato"></span></div>
+        <div class="mb-2"><strong>Segmento:</strong> <span id="viewSegmento"></span></div>
+        <hr>
+        <!-- Campos extras já existentes -->
+        <div class="mb-2"><strong>Logradouro:</strong> <span id="viewLogradouro"></span></div>
+        <div class="mb-2"><strong>Número:</strong> <span id="viewNumero"></span></div>
+        <div class="mb-2"><strong>Bairro:</strong> <span id="viewBairro"></span></div>
+        <div class="mb-2"><strong>Município:</strong> <span id="viewMunicipio"></span></div>
+        <div class="mb-2"><strong>Email:</strong> <span id="viewEmail"></span></div>
+        <div class="mb-2"><strong>Telefone:</strong> <span id="viewTelefone"></span></div>
+        <div class="mb-2"><strong>CEP:</strong> <span id="viewCEP"></span></div>
+        <hr>
+        <!-- Novos campos: Monitoramento, Dívida, Data e Observações -->
+        <div class="mb-2"><strong>Monitoramento:</strong> 
+          <span id="viewMonitoramento"></span>
+        </div>
+        <div class="mb-2"><strong>Dívida:</strong> <span id="viewDivida"></span></div>
+        <div class="mb-2"><strong>Data do Monitoramento:</strong> <span id="viewDataMonitoramento"></span></div>
+        <div class="mb-2"><strong>Observações:</strong> <span id="viewObservacoes"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
 <!-- Scripts -->
 <script>
+// Função para converter data de YYYY-MM-DD para DD/MM/YYYY
+function formatDatePortuguese(dateStr) {
+  if(!dateStr) return "";
+  const parts = dateStr.split("-");
+  if(parts.length !== 3) return dateStr;
+  return parts[2] + "/" + parts[1] + "/" + parts[0];
+}
+
 document.addEventListener("DOMContentLoaded", function () {
+  carregarClientes();
+  
+  // Controla exibição do campo de data no modal de adicionar
+  const monitoramentoCheckbox = document.getElementById("monitoramento");
+  const divDataMonitoramento = document.getElementById("divDataMonitoramento");
+  monitoramentoCheckbox.addEventListener("change", function(){
+    divDataMonitoramento.style.display = this.checked ? "block" : "none";
+  });
+  
+  // Controla exibição do campo de data no modal de editar
+  const monitoramentoCheckboxEdit = document.getElementById("monitoramento_edit");
+  const divDataMonitoramentoEdit = document.getElementById("divDataMonitoramento_edit");
+  monitoramentoCheckboxEdit.addEventListener("change", function(){
+    divDataMonitoramentoEdit.style.display = this.checked ? "block" : "none";
+  });
+  
+  function filterRows() {
+    let searchValue = document.getElementById("searchInput").value.toLowerCase();
+    let selectedFilters = Array.from(document.querySelectorAll('.filter-option:checked'))
+                                .map(input => input.value.toLowerCase());
+    let rows = document.querySelectorAll("#clientesTable tr");
+    rows.forEach(function (row) {
+      let rowText = row.innerText.toLowerCase();
+      // Se nenhum filtro for selecionado, ou se algum filtro for encontrado na linha, exibe a linha
+      let matchesFilters = selectedFilters.length === 0 || selectedFilters.some(filter => rowText.indexOf(filter) > -1);
+      let matchesSearch = rowText.indexOf(searchValue) > -1;
+      row.style.display = (matchesSearch && matchesFilters) ? "" : "none";
+    });
+  }
+  
+  document.getElementById("searchInput").addEventListener("keyup", filterRows);
+  document.querySelectorAll('.filter-option').forEach(input => {
+    input.addEventListener("change", filterRows);
+  });
+  
+  // Submissão do formulário de adicionar cliente
+  document.getElementById("formAdicionar").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    let formData = new FormData(this);
+    let clienteData = {
+      nome: formData.get("nome"),
+      cnpj: formData.get("cnpj"),
+      regime: formData.get("regime"),
+      divida: parseFloat(formData.get("divida")),
+      contrato: formData.get("contrato"),
+      segmento: formData.get("segmento"),
+      logradouro: formData.get("logradouro"),
+      numero: formData.get("numero"),
+      bairro: formData.get("bairro"),
+      municipio: formData.get("municipio"),
+      email: formData.get("email"),
+      telefone: formData.get("telefone"),
+      cep: formData.get("cep"),
+      monitoramento: formData.get("monitoramento") ? true : false,
+      data_monitoramento: formData.get("data_monitoramento"),
+      situacao_fiscal: formData.get("situacao_fiscal"),
+      observacoes: formData.get("observacoes")
+    };
+  
+    let response = await fetch("/admin/adicionar_cliente", {
+      method: "POST",
+      body: JSON.stringify(clienteData),
+      headers: { "Content-Type": "application/json" }
+    });
+  
+    let result = await response.json();
+    alert(result.message);
     carregarClientes();
-
-    // Função de filtro que junta a pesquisa e os filtros selecionados
-    function filterRows() {
-        let searchValue = document.getElementById("searchInput").value.toLowerCase();
-        let selectedFilters = Array.from(document.querySelectorAll('.filter-option:checked'))
-                                    .map(input => input.value.toLowerCase());
-        let rows = document.querySelectorAll("#clientesTable tr");
-        rows.forEach(function (row) {
-            let rowText = row.innerText.toLowerCase();
-            // Verifica se o texto da linha contém o texto da pesquisa
-            let matchesSearch = rowText.indexOf(searchValue) > -1;
-            // Verifica se a linha contém todas as opções de filtro selecionadas
-            let matchesFilters = selectedFilters.every(filter => rowText.indexOf(filter) > -1);
-            row.style.display = (matchesSearch && matchesFilters) ? "" : "none";
-        });
-    }
-
-    // Eventos para aplicar os filtros
-    document.getElementById("searchInput").addEventListener("keyup", filterRows);
-    document.querySelectorAll('.filter-option').forEach(input => {
-        input.addEventListener("change", filterRows);
+    filterRows();
+    let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalAdicionar"));
+    modal.hide();
+    this.reset();
+    divDataMonitoramento.style.display = "none";
+  });
+  
+  // Submissão do formulário de editar cliente
+  document.getElementById("formEditar").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    let formData = new FormData(this);
+    let clienteData = {
+      id: formData.get("id"),
+      nome: formData.get("nome"),
+      cnpj: formData.get("cnpj"),
+      regime: formData.get("regime"),
+      divida: parseFloat(formData.get("divida")),
+      contrato: formData.get("contrato"),
+      segmento: formData.get("segmento"),
+      logradouro: formData.get("logradouro"),
+      numero: formData.get("numero"),
+      bairro: formData.get("bairro"),
+      municipio: formData.get("municipio"),
+      email: formData.get("email"),
+      telefone: formData.get("telefone"),
+      cep: formData.get("cep"),
+      monitoramento: formData.get("monitoramento") ? true : false,
+      data_monitoramento: formData.get("data_monitoramento"),
+      situacao_fiscal: formData.get("situacao_fiscal"),
+      observacoes: formData.get("observacoes")
+    };
+  
+    let response = await fetch(`/admin/editar_cliente/${clienteData.id}`, {
+      method: "POST",
+      body: JSON.stringify(clienteData),
+      headers: { "Content-Type": "application/json" }
     });
-
-    // Submeter formulário de adicionar cliente via JSON fetch
-    document.getElementById("formAdicionar").addEventListener("submit", async function (e) {
-        e.preventDefault();
-        let formData = new FormData(this);
-        let clienteData = {
-            nome: formData.get("nome"),
-            cnpj: formData.get("cnpj"),
-            regime: formData.get("regime"),
-            divida: parseFloat(formData.get("divida")),
-            contrato: formData.get("contrato"),
-            segmento: formData.get("segmento"),
-        };
-
-        let response = await fetch("/admin/adicionar_cliente", {
-            method: "POST",
-            body: JSON.stringify(clienteData),
-            headers: { "Content-Type": "application/json" }
-        });
-
+  
+    let result = await response.json();
+    alert(result.message);
+    carregarClientes();
+    filterRows();
+    let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalEditar"));
+    modal.hide();
+  });
+  
+  async function carregarClientes() {
+    let response = await fetch('/admin/clientes_cadastrados');
+    let data = await response.text();
+    let parser = new DOMParser();
+    let newDoc = parser.parseFromString(data, 'text/html');
+    let newTable = newDoc.getElementById("clientesTable").innerHTML;
+    document.getElementById("clientesTable").innerHTML = newTable;
+  }
+  
+  document.addEventListener("click", async function (event) {
+    if (event.target.closest(".delete-btn")) {
+      let row = event.target.closest("tr");
+      let id = row.dataset.id;
+      if (confirm(`Tem certeza que deseja excluir o cliente ID ${id}?`)) {
+        let response = await fetch(`/admin/excluir_cliente/${id}`, { method: "POST" });
         let result = await response.json();
         alert(result.message);
-
-        // Recarregar a lista e aplicar filtros novamente
-        carregarClientes();
-        filterRows();
-
-        // Fechar o modal de adicionar
-        let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalAdicionar"));
-        modal.hide();
-    });
-
-    // Submeter formulário de editar cliente via JSON fetch
-    document.getElementById("formEditar").addEventListener("submit", async function (e) {
-        e.preventDefault();
-        let formData = new FormData(this);
-        let clienteData = {
-            id: formData.get("id"),
-            nome: formData.get("nome"),
-            cnpj: formData.get("cnpj"),
-            regime: formData.get("regime"),
-            divida: parseFloat(formData.get("divida")),
-            contrato: formData.get("contrato"),
-            segmento: formData.get("segmento"),
-        };
-
-        let response = await fetch(`/admin/editar_cliente/${clienteData.id}`, {
-            method: "POST",
-            body: JSON.stringify(clienteData),
-            headers: { "Content-Type": "application/json" }
-        });
-
-        let result = await response.json();
-        alert(result.message);
-
-        // Recarregar a lista e aplicar filtros
-        carregarClientes();
-        filterRows();
-
-        // Fechar o modal de editar
-        let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalEditar"));
-        modal.hide();
-    });
-
-    // Função para carregar os clientes na tabela
-    async function carregarClientes() {
-        let response = await fetch('/admin/clientes_cadastrados');
-        let data = await response.text();
-        let parser = new DOMParser();
-        let newDoc = parser.parseFromString(data, 'text/html');
-        let newTable = newDoc.getElementById("clientesTable").innerHTML;
-        document.getElementById("clientesTable").innerHTML = newTable;
+        if(result.success) {
+          row.remove();
+        }
+      }
     }
-
-    // Excluir cliente via JSON fetch e remover a linha diretamente
-    document.addEventListener("click", async function (event) {
-        if (event.target.closest(".delete-btn")) {
-            let row = event.target.closest("tr");
-            let id = row.dataset.id;
-            if (confirm(`Tem certeza que deseja excluir o cliente ID ${id}?`)) {
-                let response = await fetch(`/admin/excluir_cliente/${id}`, { method: "POST" });
-                let result = await response.json(); 
-                alert(result.message);
-                if(result.success) {
-                    row.remove();
-                }
-            }
-        }
-    });
-
-    // Editar cliente: abrir modal com dados preenchidos
-    document.addEventListener("click", function (event) {
-        if (event.target.closest(".edit-btn")) {
-            let tr = event.target.closest("tr");
-            let id = tr.dataset.id;
-            let nome = tr.querySelector(".nome").innerText;
-            let cnpj = tr.querySelector(".cnpj").innerText;
-            let regime = tr.querySelector(".regime").innerText;
-            let dividaText = tr.querySelector(".divida").innerText;
-            let divida = parseFloat(dividaText.replace("R$ ", "").replace(",", "."));
-            let contrato = tr.querySelector(".contrato").innerText;
-            let segmento = tr.querySelector(".segmento").innerText;
-
-            let formEditar = document.getElementById("formEditar");
-            formEditar.querySelector('input[name="id"]').value = id;
-            formEditar.nome.value = nome;
-            formEditar.cnpj.value = cnpj;
-            formEditar.regime.value = regime;
-            formEditar.divida.value = divida;
-            formEditar.contrato.value = contrato;
-            formEditar.segmento.value = segmento;
-
-            let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalEditar"));
-            modal.show();
-        }
-    });
+  });
+  
+  document.addEventListener("click", function (event) {
+    if (event.target.closest(".edit-btn")) {
+      let tr = event.target.closest("tr");
+      let id = tr.dataset.id;
+      let formEditar = document.getElementById("formEditar");
+      formEditar.querySelector('input[name="id"]').value = id;
+      formEditar.nome.value = tr.querySelector(".nome").innerText;
+      formEditar.cnpj.value = tr.querySelector(".cnpj").innerText;
+      formEditar.regime.value = tr.querySelector(".regime").innerText;
+      let dividaText = tr.querySelector(".divida").innerText;
+      formEditar.divida.value = parseFloat(dividaText.replace("R$ ", "").replace(",", "."));
+      formEditar.contrato.value = tr.querySelector(".contrato").innerText;
+      formEditar.segmento.value = tr.querySelector(".segmento").innerText;
+  
+      // Preencher campos extras do modal de editar
+      formEditar.logradouro.value = tr.dataset.logradouro;
+      formEditar.numero.value = tr.dataset.numero;
+      formEditar.bairro.value = tr.dataset.bairro;
+      formEditar.municipio.value = tr.dataset.municipio;
+      formEditar.email.value = tr.dataset.email;
+      formEditar.telefone.value = tr.dataset.telefone;
+      formEditar.cep.value = tr.dataset.cep;
+  
+      // Novos campos
+      let monitoramento = tr.dataset.monitoramento === "True" || tr.dataset.monitoramento === "true" || tr.dataset.monitoramento === "1";
+      formEditar.monitoramento.checked = monitoramento;
+      if(monitoramento){
+        document.getElementById("divDataMonitoramento_edit").style.display = "block";
+        formEditar.data_monitoramento.value = tr.dataset.data_monitoramento;
+      } else {
+        document.getElementById("divDataMonitoramento_edit").style.display = "none";
+      }
+      formEditar.situacao_fiscal.value = tr.dataset.situacao_fiscal;
+      formEditar.observacoes.value = tr.dataset.observacoes;
+  
+      let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalEditar"));
+      modal.show();
+    }
+  });
+  
+  document.addEventListener("click", function (event) {
+    if (event.target.closest(".view-btn")) {
+      let tr = event.target.closest("tr");
+      document.getElementById("viewNome").innerText = tr.querySelector(".nome").innerText;
+      document.getElementById("viewCNPJ").innerText = tr.querySelector(".cnpj").innerText;
+      document.getElementById("viewRegime").innerText = tr.querySelector(".regime").innerText;
+      // Removemos Dívida daqui, pois será exibida abaixo de Monitoramento
+      // document.getElementById("viewDivida").innerText = tr.querySelector(".divida").innerText;
+      document.getElementById("viewSituacaoFiscal").innerText = tr.dataset.situacao_fiscal;
+      document.getElementById("viewContrato").innerText = tr.querySelector(".contrato").innerText;
+      document.getElementById("viewSegmento").innerText = tr.querySelector(".segmento").innerText;
+  
+      document.getElementById("viewLogradouro").innerText = tr.dataset.logradouro;
+      document.getElementById("viewNumero").innerText = tr.dataset.numero;
+      document.getElementById("viewBairro").innerText = tr.dataset.bairro;
+      document.getElementById("viewMunicipio").innerText = tr.dataset.municipio;
+      document.getElementById("viewEmail").innerText = tr.dataset.email;
+      document.getElementById("viewTelefone").innerText = tr.dataset.telefone;
+      document.getElementById("viewCEP").innerText = tr.dataset.cep;
+  
+      // Exibe Monitoramento como "Ativo" ou "Inativo"
+      let monitoramentoDisplay = (tr.dataset.monitoramento === "True" || tr.dataset.monitoramento === "true" || tr.dataset.monitoramento === "1") ? "Ativo" : "Inativo";
+      document.getElementById("viewMonitoramento").innerText = monitoramentoDisplay;
+  
+      // Agora exibe Dívida abaixo de Monitoramento
+      document.getElementById("viewDivida").innerText = tr.querySelector(".divida").innerText;
+  
+      // Formata a data para o formato DD/MM/YYYY
+      document.getElementById("viewDataMonitoramento").innerText = formatDatePortuguese(tr.dataset.data_monitoramento);
+      document.getElementById("viewObservacoes").innerText = tr.dataset.observacoes;
+  
+      let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalVisualizar"));
+      modal.show();
+    }
+  });
 });
 </script>
 

@@ -1,73 +1,61 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, send_file, Response, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify
+from flask_login import login_required, current_user
 import pandas as pd
-import io
 import os
-from models.db import db  
-from models.clientes_db import Cliente  
+from datetime import datetime
+from models.db import db
+from models.clientes_db import Cliente
 
 bp_admin = Blueprint('admin', __name__, url_prefix='/admin')
 
-# 📌 Página principal
+# Página principal
 @bp_admin.route('/')
+@login_required
 def index():
-    if 'usuario' not in session:
-        flash("Você precisa fazer login primeiro!", "warning")
-        return redirect(url_for('admin.login_admin'))
-    
-    total = Cliente.query.count()
+    total = Cliente.query.filter_by(usuario_id=current_user.id).count()
     return render_template('admin/index.html', total_clientes=total)
 
-# 🔑 Login do admin
-@bp_admin.route('/login', methods=['GET', 'POST'])
-def login_admin():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        senha = request.form.get('password')
-
-        if email == "admin@email.com" and senha == "1234":
-            session['usuario'] = email
-            flash("Login realizado com sucesso!", "success")
-            return redirect(url_for('admin.index'))
-        else:
-            flash("Credenciais inválidas!", "danger")
-
-    return render_template('admin/login_admin.html')
-
-# 🚪 Logout
-@bp_admin.route('/logout')
-def logout_admin():
-    session.pop('usuario', None)
-    flash("Logout realizado com sucesso!", "info")
-    return redirect(url_for('admin.login_admin'))
-
-# 📄 Lista de clientes cadastrados
+# Lista de clientes cadastrados
 @bp_admin.route('/clientes_cadastrados')
+@login_required
 def clientes_cadastrados():
-    if 'usuario' not in session:
-        flash("Você precisa fazer login primeiro!", "warning")
-        return redirect(url_for('admin.login_admin'))
-
-    clientes = Cliente.query.all()
+    clientes = Cliente.query.filter_by(usuario_id=current_user.id).all()
     return render_template('admin/clientes_cadastrados.html', clientes=clientes)
 
-# ➕ Adicionar cliente no banco
+# Adicionar cliente no banco
 @bp_admin.route('/adicionar_cliente', methods=['POST'])
+@login_required
 def adicionar_cliente():
-    data = request.get_json()  # Lê o corpo como JSON
+    data = request.get_json()
 
     nome = data.get('nome')
     cnpj = data.get('cnpj')
     regime = data.get('regime')
-    divida = float(data.get('divida', 0))
+    try:
+        divida = float(data.get('divida', 0))
+    except (ValueError, TypeError):
+        divida = 0
     contrato = data.get('contrato')
     segmento = data.get('segmento', '')
+    logradouro = data.get('logradouro')
+    numero = data.get('numero')
+    bairro = data.get('bairro')
+    municipio = data.get('municipio')
+    email = data.get('email')
+    telefone = data.get('telefone')
+    cep = data.get('cep')
 
-    # 🔹 Agora 'nome', 'cnpj' etc. virão do JSON enviado pelo fetch
+    monitoramento_valor = data.get('monitoramento')
+    monitoramento = True if monitoramento_valor in [True, "on", "true", "True", "1"] else False
+    data_monitoramento_str = data.get('data_monitoramento')
+    data_monitoramento = datetime.strptime(data_monitoramento_str, "%Y-%m-%d").date() if data_monitoramento_str else None
+    situacao_fiscal = data.get('situacao_fiscal')
+    observacoes = data.get('observacoes')
+
     if not nome or not cnpj:
         return jsonify({"message": "Nome e CNPJ são obrigatórios!"}), 400
 
-    cliente_existente = Cliente.query.filter_by(cnpj=cnpj).first()
-    if cliente_existente:
+    if Cliente.query.filter_by(cnpj=cnpj, usuario_id=current_user.id).first():
         return jsonify({"message": "Erro: Já existe um cliente com esse CNPJ!"}), 400
 
     novo_cliente = Cliente(
@@ -76,7 +64,19 @@ def adicionar_cliente():
         regime=regime,
         divida=divida,
         contrato=contrato,
-        segmento=segmento
+        segmento=segmento,
+        logradouro=logradouro,
+        numero=numero,
+        bairro=bairro,
+        municipio=municipio,
+        email=email,
+        telefone=telefone,
+        cep=cep,
+        monitoramento=monitoramento,
+        data_monitoramento=data_monitoramento,
+        situacao_fiscal=situacao_fiscal,
+        observacoes=observacoes,
+        usuario_id=current_user.id
     )
 
     try:
@@ -87,23 +87,25 @@ def adicionar_cliente():
         db.session.rollback()
         return jsonify({"message": f"Erro ao cadastrar cliente: {str(e)}"}), 500
 
-# ❌ Excluir Cliente
+# Excluir Cliente
 @bp_admin.route('/excluir_cliente/<int:id>', methods=['POST'])
+@login_required
 def excluir_cliente(id):
-    cliente = Cliente.query.get(id)
+    cliente = Cliente.query.filter_by(id=id, usuario_id=current_user.id).first()
     if cliente:
         db.session.delete(cliente)
         db.session.commit()
         flash("Cliente excluído com sucesso!", "success")
+        return jsonify({"success": True, "message": "Cliente excluído com sucesso!"})
     else:
         flash("Erro: Cliente não encontrado!", "danger")
+        return jsonify({"success": False, "message": "Cliente não encontrado!"}), 404
 
-    return redirect(url_for('admin.clientes_cadastrados'))
-
-# 📤 Exportar clientes para CSV
+# Exportar clientes para CSV
 @bp_admin.route('/exportar')
+@login_required
 def exportar():
-    clientes = Cliente.query.all()
+    clientes = Cliente.query.filter_by(usuario_id=current_user.id).all()
     if not clientes:
         flash("Nenhum cliente para exportar!", "danger")
         return redirect(url_for('admin.clientes_cadastrados'))
@@ -125,41 +127,52 @@ def exportar():
     flash("Clientes exportados com sucesso!", "success")
     return send_file(file_path, as_attachment=True)
 
-# 📥 Importar clientes de CSV/Excel
+# Importar clientes de CSV/Excel (não implementado ainda)
 @bp_admin.route('/importar', methods=['POST'])
+@login_required
 def importar():
     file = request.files.get('file')
-
     if not file:
         flash("Nenhum arquivo foi enviado!", "danger")
         return redirect(url_for('admin.clientes_cadastrados'))
 
-    # Lógica para ler CSV/Excel...
-    # Exemplo rápido:
-    # df = pd.read_excel(file) if file.filename.endswith('.xlsx') else pd.read_csv(file)
-    # ...
-    # db.session.add(...)
-    # db.session.commit()
-
+    # Lógica de importação a ser implementada futuramente
     flash("Importação realizada com sucesso!", "success")
     return redirect(url_for('admin.clientes_cadastrados'))
 
-
+# Editar cliente
 @bp_admin.route('/editar_cliente/<int:id>', methods=['POST'])
+@login_required
 def editar_cliente(id):
     data = request.get_json()
-    cliente = Cliente.query.get(id)
-    
+    cliente = Cliente.query.filter_by(id=id, usuario_id=current_user.id).first()
+
     if not cliente:
         return jsonify({'success': False, 'message': 'Cliente não encontrado.'}), 404
 
-    # Atualiza os campos do cliente
     cliente.nome = data.get('nome', cliente.nome)
     cliente.cnpj = data.get('cnpj', cliente.cnpj)
     cliente.regime = data.get('regime', cliente.regime)
-    cliente.divida = data.get('divida', cliente.divida)
+    try:
+        cliente.divida = float(data.get('divida', cliente.divida))
+    except (ValueError, TypeError):
+        pass
     cliente.contrato = data.get('contrato', cliente.contrato)
     cliente.segmento = data.get('segmento', cliente.segmento)
+    cliente.logradouro = data.get('logradouro', cliente.logradouro)
+    cliente.numero = data.get('numero', cliente.numero)
+    cliente.bairro = data.get('bairro', cliente.bairro)
+    cliente.municipio = data.get('municipio', cliente.municipio)
+    cliente.email = data.get('email', cliente.email)
+    cliente.telefone = data.get('telefone', cliente.telefone)
+    cliente.cep = data.get('cep', cliente.cep)
+
+    monitoramento_valor = data.get('monitoramento')
+    cliente.monitoramento = True if monitoramento_valor in [True, "on", "true", "True", "1"] else False
+    data_monitoramento_str = data.get('data_monitoramento')
+    cliente.data_monitoramento = datetime.strptime(data_monitoramento_str, "%Y-%m-%d").date() if data_monitoramento_str else None
+    cliente.situacao_fiscal = data.get('situacao_fiscal', cliente.situacao_fiscal)
+    cliente.observacoes = data.get('observacoes', cliente.observacoes)
 
     try:
         db.session.commit()
