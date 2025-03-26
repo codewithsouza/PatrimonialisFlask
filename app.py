@@ -2,6 +2,8 @@ from flask import Flask
 from flask_login import LoginManager
 from models.db import db
 from models.usuario import Usuario
+from flask import Flask, render_template
+
 
 # Blueprints
 from routes.auth import auth

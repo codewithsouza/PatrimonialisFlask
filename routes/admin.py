@@ -5,6 +5,8 @@ import os
 from datetime import datetime
 from models.db import db
 from models.clientes_db import Cliente
+from models.divida_db import Divida
+from sqlalchemy.sql import func
 
 bp_admin = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -180,3 +182,80 @@ def editar_cliente(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Erro ao atualizar o cliente: {str(e)}'}), 500
+
+# Registrar dívida
+@bp_admin.route('/registrar_divida', methods=['POST'])
+@login_required
+def registrar_divida():
+    cliente_id = request.form.get('cliente_id')
+    valor_pago = request.form.get('valor_pago')
+    observacoes = request.form.get('obs')
+
+    try:
+        valor = float(valor_pago.replace(',', '.'))
+    except (ValueError, TypeError):
+        flash("Valor inválido!", "danger")
+        return redirect(url_for('admin.divida_ativa'))
+
+    nova_divida = Divida(
+        cliente_id=cliente_id,
+        valor_pago=valor,
+        observacoes=observacoes,
+        usuario_id=current_user.id  # Associando a dívida ao usuário logado
+    )
+
+    db.session.add(nova_divida)
+    db.session.commit()
+
+    flash("Dívida registrada com sucesso!", "success")
+    return redirect(url_for('admin.divida_ativa'))
+
+
+@bp_admin.route('/divida_ativa')
+@login_required
+def divida_ativa():
+    # Filtra as dívidas de acordo com o usuario_id do usuário logado
+    dividas = Divida.query.filter_by(usuario_id=current_user.id).all()
+    clientes = Cliente.query.filter_by(usuario_id=current_user.id).all()
+
+    # Calculando o total de dívidas
+    total_dividas = sum(cliente.divida or 0 for cliente in clientes)
+
+    # Calculando o total pago
+    total_pago = sum(divida.valor_pago or 0 for divida in dividas)
+
+    # Calculando o total em aberto (valor da dívida - total pago)
+    total_em_aberto = total_dividas - total_pago
+
+    return render_template('admin/divida_ativa.html', 
+                           dividas=dividas, 
+                           total_dividas=total_dividas, 
+                           total_pago=total_pago, 
+                           total_em_aberto=total_em_aberto, 
+                           clientes=clientes)
+
+@bp_admin.route('/registrar_pagamento', methods=['POST'])
+@login_required
+def registrar_pagamento():
+    data = request.get_json()
+    cliente_id = data.get('cliente_id')
+    valor_pago = float(data.get('valor_pago', 0))
+    observacoes = data.get('observacoes', '')
+
+    # Criar nova dívida
+    nova_divida = Divida(
+        cliente_id=cliente_id,
+        valor_pago=valor_pago,
+        observacoes=observacoes,
+        usuario_id=current_user.id
+    )
+    db.session.add(nova_divida)
+
+    # Atualizar valor da dívida no cliente
+    cliente = Cliente.query.filter_by(id=cliente_id, usuario_id=current_user.id).first()
+    if cliente:
+        cliente.divida = (cliente.divida or 0) - valor_pago
+
+    db.session.commit()
+
+    return jsonify({"mensagem": "Pagamento registrado com sucesso!"})

@@ -25,3 +25,6 @@ class Cliente(db.Model):
     # FK e relacionamento com Usuario
     usuario_id = db.Column(db.Integer, db.ForeignKey('cadastro.id'), nullable=False)
     usuario = db.relationship('Usuario', backref=db.backref('clientes', lazy=True))
+
+
+
