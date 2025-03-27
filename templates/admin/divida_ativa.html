@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,37 +8,54 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
-<body class="bg-gray-100 p-6">
-    <div class="max-w-7xl mx-auto">
-        <!-- Topo com logo e título centralizado -->
+<body class="bg-gray-100">
+    <div class="p-6 max-w-7xl mx-auto">
+        <!-- Topo -->
         <div class="flex justify-between items-center mb-6">
             <a href="{{ url_for('admin.index') }}">
                 <img src="{{ url_for('static', filename='imagens/patrimonialis_logo.jpeg') }}" alt="Logo" class="h-12">
             </a>
-            <h1 class="text-3xl font-bold text-center w-full">Monitoramento de Dívidas</h1>
+            <h1 class="text-4xl font-bold text-center text-blue-800 w-full flex items-center justify-center gap-2">
+                <i class="fas fa-money-check-alt"></i> Monitoramento de Dívidas
+            </h1>
+        </div>
+
+        <!-- Última atualização -->
+        <div class="text-sm text-gray-600 mb-4">📅 Última atualização: {{ data_atualizacao }}</div>
+
+        <!-- Cliente Selecionado Banner -->
+        <div id="clienteSelecionadoBanner" class="hidden mb-4">
+            <h2 class="text-2xl font-bold text-blue-700">👤 <span id="nomeClienteSelecionado"></span></h2>
         </div>
 
         <!-- Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white shadow-md rounded-2xl p-4">
-                <p class="text-gray-500">Total de Dívidas Ativas</p>
-                <p class="text-2xl font-semibold">R$ {{ '%.2f'|format(total_dividas) }}</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6" id="cardsResumo">
+            <div class="bg-white shadow-xl rounded-2xl p-6 text-center transition-all duration-200 hover:scale-[1.02]" id="cardTotalDividaWrapper">
+                <p class="text-gray-500 text-lg mb-1">Total de Dívidas Ativas</p>
+                <p class="text-3xl font-bold text-gray-800" id="cardTotalDivida" data-original="{{ '%.2f'|format(total_dividas if total_dividas is defined else 0.0) }}">R$ {{ '%.2f'|format(total_dividas if total_dividas is defined else 0.0) }}</p>
             </div>
-            <div class="bg-white shadow-md rounded-2xl p-4">
-                <p class="text-gray-500">Total de Dívidas em Cobrança</p>
-                <p class="text-2xl font-semibold text-red-500">--</p>
+            <div class="bg-white shadow-xl rounded-2xl p-6 text-center">
+                <p class="text-gray-500 text-lg mb-1">Total de Dívidas em Cobrança</p>
+                <p class="text-3xl font-bold text-red-500">--</p>
             </div>
-            <div class="bg-white shadow-md rounded-2xl p-4">
-                <p class="text-gray-500">Suspensas</p>
-                <p class="text-2xl font-semibold text-green-600">R$ {{ '%.2f'|format(total_pago) }}</p>
+            <div class="bg-white shadow-xl rounded-2xl p-6 text-center transition-all duration-200 hover:scale-[1.02]" id="cardTotalPagoWrapper">
+                <p class="text-gray-500 text-lg mb-1">Suspensas</p>
+                <p class="text-3xl font-bold text-green-600" id="cardTotalPago" data-original="{{ '%.2f'|format(total_pago if total_pago is defined else 0.0) }}">R$ {{ '%.2f'|format(total_pago if total_pago is defined else 0.0) }}</p>
             </div>
-            <div class="bg-white shadow-md rounded-2xl p-4">
-                <p class="text-gray-500">Baixados</p>
-                <p class="text-2xl font-semibold text-yellow-500">R$ {{ '%.2f'|format(total_em_aberto) }}</p>
+            <div class="bg-white shadow-xl rounded-2xl p-6 text-center transition-all duration-200 hover:scale-[1.02]" id="cardBaixadasWrapper">
+                <p class="text-gray-500 text-lg mb-1">Dívidas Baixadas</p>
+                <p class="text-3xl font-bold text-yellow-500" id="cardBaixadas" data-original="0.00">R$ 0.00</p>
             </div>
         </div>
 
-        <!-- Barra de pesquisa -->
+        <!-- Exportar dados -->
+        <div class="mb-4">
+            <button onclick="exportarTabela()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">
+                <i class="fas fa-file-export mr-2"></i>Exportar para Excel
+            </button>
+        </div>
+
+        <!-- Pesquisa -->
         <div class="mb-4">
             <input type="text" id="search" oninput="filtrarClientes()" placeholder="Pesquisar cliente..."
                 class="px-4 py-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -48,34 +64,41 @@
         <!-- Tabela -->
         <div class="bg-white shadow-md rounded-2xl overflow-x-auto mb-6">
             <table class="min-w-full text-sm" id="clientesTabela">
-                <thead class="bg-gray-200 text-gray-700">
+                <thead class="bg-gray-700 text-white">
                     <tr>
-                        <th class="px-4 py-2 text-left">Cliente</th>
-                        <th class="px-4 py-2 text-left">Valor Total</th>
-                        <th class="px-4 py-2 text-left">Valor Pago</th>
-                        <th class="px-4 py-2 text-left">Em Aberto</th>
-                        <th class="px-4 py-2 text-left">Ações</th>
+                        <th class="px-4 py-3 text-left">Cliente</th>
+                        <th class="px-4 py-3 text-left">Valor Total</th>
+                        <th class="px-4 py-3 text-left">Valor Pago</th>
+                        <th class="px-4 py-3 text-left">Em Aberto</th>
+                        <th class="px-4 py-3 text-left">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for cliente in clientes %}
                     {% set valor_pago = cliente.dividas | map(attribute='valor_pago') | sum %}
                     {% set em_aberto = (cliente.divida or 0) - valor_pago %}
-                    <tr class="border-t cliente-row" data-id="{{ cliente.id }}">
-                        <td class="px-4 py-2">{{ cliente.nome }}</td>
-                        <td class="px-4 py-2">R$ {{ '%.2f'|format(cliente.divida or 0) }}</td>
-                        <td class="px-4 py-2 text-green-600">R$ {{ '%.2f'|format(valor_pago) }}</td>
-                        <td class="px-4 py-2 text-yellow-500">R$ {{ '%.2f'|format(em_aberto) }}</td>
-                        <td class="px-4 py-2 space-x-1">
-                            <button class="bg-cyan-400 hover:bg-cyan-500 text-white font-bold py-2 px-2 rounded shadow"
-                                onclick="abrirModal({{ cliente.id }})">
+                    {% set baixadas = valor_pago if valor_pago == (cliente.divida or 0) and valor_pago > 0 else 0 %}
+                    <tr class="border-t even:bg-gray-50 cliente-row cursor-pointer hover:bg-gray-100"
+                        data-id="{{ cliente.id }}"
+                        data-nome="{{ cliente.nome }}"
+                        data-divida-total="R$ {{ '%.2f'|format(cliente.divida or 0) }}"
+                        data-pago="R$ {{ '%.2f'|format(valor_pago) }}"
+                        data-baixadas="R$ {{ '%.2f'|format(baixadas) }}"
+                        onclick="filtrarPorCliente(this)">
+                        <td class="px-4 py-3 font-medium">{{ cliente.nome }}</td>
+                        <td class="px-4 py-3">R$ {{ '%.2f'|format(cliente.divida or 0) }}</td>
+                        <td class="px-4 py-3 text-green-600">R$ {{ '%.2f'|format(valor_pago) }}</td>
+                        <td class="px-4 py-3 text-yellow-500">R$ {{ '%.2f'|format(em_aberto) }}</td>
+                        <td class="px-4 py-3 space-x-1">
+                            <button title="Visualizar" class="bg-cyan-400 hover:bg-cyan-500 text-white font-bold py-2 px-2 rounded shadow"
+                                onclick="abrirModal({{ cliente.id }}, '{{ cliente.nome }}', '{{ '%.2f'|format(cliente.divida or 0) }}', '{{ '%.2f'|format(valor_pago) }}')">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-2 px-2 rounded shadow"
+                            <button title="Simular Pagamento" class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-2 px-2 rounded shadow"
                                 onclick="abrirSimulacao({{ cliente.id }})">
                                 <i class="fas fa-coins"></i>
                             </button>
-                            <button class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-2 rounded shadow">
+                            <button title="Excluir" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-2 rounded shadow">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -84,91 +107,114 @@
                 </tbody>
             </table>
         </div>
-
-        <!-- Modal de detalhes -->
-        <div id="modalCliente"
-            class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
-            <div class="bg-white rounded-2xl p-6 w-1/3">
-                <h2 class="text-2xl font-semibold mb-4">Detalhes do Cliente</h2>
-                <div id="clienteDetalhes"></div>
-                <button onclick="fecharModal()"
-                    class="mt-4 text-red-600 hover:underline">Fechar</button>
-            </div>
-        </div>
-
-        <!-- Modal de simulação de pagamento -->
-        <div id="modalSimulacao"
-            class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-2xl p-6 w-full max-w-md">
-                <h2 class="text-xl font-bold mb-4">Simular Pagamento</h2>
-                <form id="formSimulacao">
-                    <input type="hidden" id="clienteSimulacaoId">
-                    <div class="mb-4">
-                        <label for="valorPago" class="block font-medium text-sm mb-1">Valor Pago</label>
-                        <input type="number" step="0.01" id="valorPago"
-                            class="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:ring focus:ring-blue-300">
-                    </div>
-                    <div class="mb-4">
-                        <label for="observacoes" class="block font-medium text-sm mb-1">Observações</label>
-                        <textarea id="observacoes" rows="3"
-                            class="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:ring focus:ring-blue-300"></textarea>
-                    </div>
-                    <div class="flex justify-end space-x-2">
-                        <button type="button" onclick="fecharSimulacao()"
-                            class="text-red-500 hover:underline">Cancelar</button>
-                        <button type="submit"
-                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Confirmar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <script>
-            function filtrarClientes() {
-                const termo = document.getElementById('search').value.toLowerCase();
-                document.querySelectorAll('.cliente-row').forEach(linha => {
-                    const nome = linha.querySelector('td').textContent.toLowerCase();
-                    linha.style.display = nome.includes(termo) ? '' : 'none';
-                });
-            }
-
-            function abrirModal(id) {
-                document.getElementById('clienteDetalhes').innerHTML = `
-                    <p><strong>Nome:</strong> Cliente Exemplo</p>
-                    <p><strong>Valor Total:</strong> R$ 1000.00</p>
-                    <p><strong>Valor Pago:</strong> R$ 500.00</p>
-                    <p><strong>Em Aberto:</strong> R$ 500.00</p>`;
-                document.getElementById('modalCliente').classList.remove('hidden');
-                document.getElementById('modalCliente').classList.add('flex');
-            }
-
-            function fecharModal() {
-                document.getElementById('modalCliente').classList.add('hidden');
-            }
-
-            function abrirSimulacao(clienteId) {
-                document.getElementById('clienteSimulacaoId').value = clienteId;
-                document.getElementById('valorPago').value = '';
-                document.getElementById('observacoes').value = '';
-                document.getElementById('modalSimulacao').classList.remove('hidden');
-                document.getElementById('modalSimulacao').classList.add('flex');
-            }
-
-            function fecharSimulacao() {
-                document.getElementById('modalSimulacao').classList.add('hidden');
-            }
-
-            document.getElementById('formSimulacao').addEventListener('submit', function (e) {
-                e.preventDefault();
-                const id = document.getElementById('clienteSimulacaoId').value;
-                const valor = document.getElementById('valorPago').value;
-                const obs = document.getElementById('observacoes').value;
-                console.log(`Cliente ${id} pagou R$ ${valor}. Obs: ${obs}`);
-                fecharSimulacao();
-                // Aqui você pode fazer um fetch/POST para salvar no backend
-            });
-        </script>
     </div>
-</body>
 
+    <!-- Modal de Detalhes do Cliente (Optional) -->
+    <div id="modalCliente" class="hidden fixed inset-0 bg-black bg-opacity-50 justify-center items-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-blue-700">Detalhes do Cliente</h2>
+                <button onclick="fecharModal()" class="text-red-500 hover:text-red-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div id="clienteDetalhes"></div>
+        </div>
+    </div>
+
+    <!-- Scripts JS -->
+    <script>
+        let clienteSelecionado = false;
+
+        function filtrarClientes() {
+            const termo = document.getElementById('search').value.toLowerCase();
+            document.querySelectorAll('.cliente-row').forEach(row => {
+                const nome = row.dataset.nome.toLowerCase();
+                row.style.display = nome.includes(termo) ? '' : 'none';
+            });
+        }
+
+        function filtrarPorCliente(row) {
+            // Get client data from row dataset
+            const dividaTotal = row.dataset.dividaTotal;
+            const pago = row.dataset.pago;
+            const baixadas = row.dataset.baixadas;
+
+            // Update card values
+            document.getElementById('cardTotalDivida').textContent = dividaTotal;
+            document.getElementById('cardTotalPago').textContent = pago;
+            document.getElementById('cardBaixadas').textContent = baixadas;
+
+            // Add highlighting to cards
+            document.getElementById('cardTotalDividaWrapper').classList.add('ring-2', 'ring-blue-400');
+            document.getElementById('cardTotalPagoWrapper').classList.add('ring-2', 'ring-green-400');
+            document.getElementById('cardBaixadasWrapper').classList.add('ring-2', 'ring-yellow-400');
+
+            // Show client name banner
+            const clienteNome = row.dataset.nome;
+            document.getElementById('nomeClienteSelecionado').textContent = clienteNome;
+            document.getElementById('clienteSelecionadoBanner').classList.remove('hidden');
+
+            // Set client selected state
+            clienteSelecionado = true;
+        }
+
+        function resetarTotais() {
+            // Restore original values from data-original attribute
+            document.getElementById('cardTotalDivida').textContent = 
+                `R$ ${parseFloat(document.getElementById('cardTotalDivida').dataset.original).toFixed(2)}`;
+            document.getElementById('cardTotalPago').textContent = 
+                `R$ ${parseFloat(document.getElementById('cardTotalPago').dataset.original).toFixed(2)}`;
+            document.getElementById('cardBaixadas').textContent = 
+                `R$ ${parseFloat(document.getElementById('cardBaixadas').dataset.original).toFixed(2)}`;
+
+            // Remove highlighting from cards
+            document.getElementById('cardTotalDividaWrapper').classList.remove('ring-2', 'ring-blue-400');
+            document.getElementById('cardTotalPagoWrapper').classList.remove('ring-2', 'ring-green-400');
+            document.getElementById('cardBaixadasWrapper').classList.remove('ring-2', 'ring-yellow-400');
+
+            // Hide client name banner
+            document.getElementById('clienteSelecionadoBanner').classList.add('hidden');
+
+            // Reset client selected state
+            clienteSelecionado = false;
+        }
+
+        // Event listener to handle clicks outside the table and cards
+        document.addEventListener('click', function (e) {
+            const cardsResumo = document.getElementById('cardsResumo');
+            const clientesTabela = document.getElementById('clientesTabela');
+
+            // Check if click is outside cards and table, and a client is currently selected
+            if (!cardsResumo.contains(e.target) && 
+                !clientesTabela.contains(e.target) && 
+                clienteSelecionado) {
+                resetarTotais();
+            }
+        });
+
+        function abrirModal(id, nome, total, pago) {
+            const aberto = (parseFloat(total) - parseFloat(pago)).toFixed(2);
+            document.getElementById('clienteDetalhes').innerHTML = `
+                <p><strong>Nome:</strong> ${nome}</p>
+                <p><strong>Valor Total:</strong> R$ ${parseFloat(total).toFixed(2)}</p>
+                <p><strong>Valor Pago:</strong> R$ ${parseFloat(pago).toFixed(2)}</p>
+                <p><strong>Em Aberto:</strong> R$ ${aberto}</p>`;
+            document.getElementById('modalCliente').classList.remove('hidden');
+            document.getElementById('modalCliente').classList.add('flex');
+        }
+
+        function fecharModal() {
+            document.getElementById('modalCliente').classList.add('hidden');
+        }
+
+        function exportarTabela() {
+            alert('Exportação para Excel em desenvolvimento...');
+        }
+
+        function abrirSimulacao(id) {
+            alert('Simulação de pagamento em desenvolvimento...');
+        }
+    </script>
+</body>
 </html>
