@@ -42,10 +42,6 @@ Este é um sistema web completo desenvolvido com *Flask* e *MySQL, focado no ger
 ![Divida Ativa](imagens/Divida%20ativa.jpeg)
 
 
-> 📂 Todas as imagens devem ser adicionadas na pasta images/ do seu repositório (ou ajuste os caminhos conforme preferir).
-
----
-
 ## 🛠️ Tecnologias Utilizadas
 
 - *Python* – Flask, Flask-Login, SQLAlchemy
@@ -61,10 +57,3 @@ Este é um sistema web completo desenvolvido com *Flask* e *MySQL, focado no ger
 O sistema utiliza autenticação com Flask-Login. Cada cliente é vinculado ao usuario_id, associado ao current_user.id. Assim, os administradores acessam apenas os registros que eles mesmos criaram.
 
 ---
-
-## 🚀 Como Executar Localmente
-
-1. Clone este repositório:
-```bash
-git clone https://github.com/seu-usuario/seu-repositorio.git
-cd seu-repositorio
