@@ -24,7 +24,7 @@ Este é um sistema web completo desenvolvido com *Flask* e *MySQL, focado no ger
 ![Login](imagens/pagina_login.jfif)
 
 ### 📝 Criar Conta
-![Criar Conta](images/pagina_criar_conta.jfif)
+![Criar Conta](imagens/criar%20conta.jpeg)
 
 ### 🏠 Dashboard
 ![Dashboard](imagens/dashboard_administrativo.jfif)
@@ -37,6 +37,10 @@ Este é um sistema web completo desenvolvido com *Flask* e *MySQL, focado no ger
 
 ### 🔎 Visualizar Detalhes
 ![Detalhes do Cliente](imagens/detalhes_clientes.jfif)
+
+###  💰 Monitoramento de Dívida Ativa
+![Divida Ativa](imagens/Divida%20ativa.jpeg)
+
 
 > 📂 Todas as imagens devem ser adicionadas na pasta images/ do seu repositório (ou ajuste os caminhos conforme preferir).
 
