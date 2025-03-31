@@ -93,11 +93,10 @@
         <a href="{{ url_for('admin.clientes_cadastrados') }}"><i class="fas fa-users"></i> Clientes</a>
         <a href="{{ url_for('admin.divida_ativa') }}"><i class="fas fa-dollar-sign"></i> Cobranças</a>
         <a href="#"><i class="fas fa-chart-line"></i> Estatísticas</a>
+        <a href="#"><i class="fas fa-cogs"></i> Configurações</a>
         <a href="#"><i class="fas fa-headset"></i> Suporte</a>
         <a href="#"><i class="fas fa-wallet"></i> Financeiro</a>
         <a href="#"><i class="fas fa-file-signature"></i> Contratos</a>
-        <a href="#"><i class="fas fa-envelope"></i> Mensagens</a>
-        <a href="#"><i class="fas fa-cogs"></i> Configurações</a>
 
 
 
@@ -156,18 +155,16 @@
                     <p class="fs-5">8 Este Mês</p>
                 </div>
             </div>
-
+            
             <div>
                 <a href="{{ url_for('admin.divida_ativa') }}" style="text-decoration: none; color: inherit;">
                     <div class="card text-center shadow-sm hover:shadow-lg transition">
                         <i class="fas fa-dollar-sign fa-3x text-danger mt-3"></i>
                         <h4 class="mt-3">Monitoramento Ativo</h4>
-                        <p class="fs-5">150</p>
+                        <p class="fs-5">{{ total_clientes if total_clientes else '...' }}</p>
                     </div>
                 </a>
             </div>
-        </div>
-
         <div class="mt-5">
             <h4>Estatísticas</h4>
             <canvas id="myChart"></canvas>

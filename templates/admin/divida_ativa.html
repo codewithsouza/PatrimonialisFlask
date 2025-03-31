@@ -245,28 +245,41 @@
             resetarTotais();
         }
     });
-
     function abrirModal(id, nome, total, pago) {
-        const cliente = {
-            nome: nome,
-            total: parseFloat(total),
-            pago: parseFloat(pago),
-            status: 'Ativa',
-            ultimo_pagamento: '-',
-            observacao: ''
-        };
-        document.getElementById('clienteDetalhes').innerHTML = `
-    <p><strong>Nome:</strong> ${cliente.nome}</p>
-    <p><strong>Valor Total:</strong> R$ ${cliente.total.toFixed(2)}</p>
-    <p><strong>Valor Pago:</strong> R$ ${cliente.pago.toFixed(2)}</p>
-    <p><strong>Em Aberto:</strong> R$ ${(cliente.total - cliente.pago).toFixed(2)}</p>
-    <p><strong>Status:</strong> ${cliente.status}</p>
-    <p><strong>Último Pagamento:</strong> ${cliente.ultimo_pagamento}</p>
-    <p><strong>Observações:</strong> ${cliente.observacao || 'Nenhuma'}</p>
-  `;
-        document.getElementById('modalCliente').classList.remove('hidden');
-        document.getElementById('modalCliente').classList.add('flex');
-    }
+    const row = document.querySelector(`tr[data-id='${id}']`);
+
+    const cliente = {
+        nome: nome,
+        cnpj: row.querySelector('td:nth-child(3)').innerText,
+        regime: row.querySelector('td:nth-child(4)').innerText,
+        contrato: row.querySelector('td:nth-child(5)').innerText,
+        total: parseFloat(total),
+        pago: parseFloat(pago),
+        emAberto: parseFloat(total) - parseFloat(pago),
+        status: 'Ativa',
+        ultimo_pagamento: '-',
+        observacao: 'Nenhuma'
+    };
+
+    document.getElementById('clienteDetalhes').innerHTML = `
+        <p><strong>ID:</strong> ${id}</p>
+        <p><strong>Nome:</strong> ${cliente.nome}</p>
+        <p><strong>CNPJ:</strong> ${cliente.cnpj}</p>
+        <p><strong>Regime:</strong> ${cliente.regime}</p>
+        <p><strong>Contrato:</strong> ${cliente.contrato}</p>
+        <hr>
+        <p><strong>Valor Total da Dívida:</strong> R$ ${cliente.total.toFixed(2)}</p>
+        <p><strong>Valor Pago:</strong> R$ ${cliente.pago.toFixed(2)}</p>
+        <p><strong>Em Aberto:</strong> R$ ${cliente.emAberto.toFixed(2)}</p>
+        <p><strong>Status:</strong> ${cliente.status}</p>
+        <p><strong>Último Pagamento:</strong> ${cliente.ultimo_pagamento}</p>
+        <p><strong>Observações:</strong> ${cliente.observacao}</p>
+    `;
+
+    document.getElementById('modalCliente').classList.remove('hidden');
+    document.getElementById('modalCliente').classList.add('flex');
+}
+
 
     function abrirSimulacao(id) {
         const row = document.querySelector(`tr[data-id='${id}']`);
