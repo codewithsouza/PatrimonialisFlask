@@ -29,11 +29,11 @@ Este é um sistema web completo desenvolvido com *Flask* e *MySQL, focado no ger
 ### 🏠 Dashboard
 ![Dashboard](imagens/dashboard_administrativo.jfif)
 
-### ➕ Adicionar Cliente
-![Adicionar Cliente](imagens/adicionar_clientes.jfif)
-
 ### 📋 Clientes Cadastrados
 ![Clientes Cadastrados](imagens/clientes_cadastrados.jfif)
+
+### ➕ Adicionar Cliente
+![Adicionar Cliente](imagens/adicionar_clientes.jfif)
 
 ### 🔎 Visualizar Detalhes
 ![Detalhes do Cliente](imagens/detalhes_clientes.jfif)

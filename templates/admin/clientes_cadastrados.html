@@ -20,9 +20,11 @@
 
     <!-- Direita: Pesquisa, Filtro e Exportar -->
     <div class="col-md-6 d-flex gap-2 justify-content-end align-items-center">
-      <input type="text" class="form-control" id="searchInput" placeholder="Pesquisar Cliente..." style="max-width: 250px;">
+      <input type="text" class="form-control" id="searchInput" placeholder="Pesquisar Cliente..."
+        style="max-width: 250px;">
       <div class="btn-group">
-        <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Filtrar">
+        <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown"
+          aria-expanded="false" title="Filtrar">
           <i class="fas fa-filter"></i>
         </button>
         <ul class="dropdown-menu dropdown-menu-end p-3" style="min-width: 250px;">
@@ -46,7 +48,8 @@
           </li>
           <li>
             <div class="form-check">
-              <input class="form-check-input filter-option" type="checkbox" value="Prestação de Serviços" id="filterPrestacao">
+              <input class="form-check-input filter-option" type="checkbox" value="Prestação de Serviços"
+                id="filterPrestacao">
               <label class="form-check-label" for="filterPrestacao">Prestação de Serviços</label>
             </div>
           </li>
@@ -99,23 +102,17 @@
       </thead>
       <tbody id="clientesTable">
         {% for cliente in clientes %}
-        <tr data-id="{{ cliente.id }}"
-            data-logradouro="{{ cliente.logradouro }}"
-            data-numero="{{ cliente.numero }}"
-            data-bairro="{{ cliente.bairro }}"
-            data-municipio="{{ cliente.municipio }}"
-            data-email="{{ cliente.email }}"
-            data-telefone="{{ cliente.telefone }}"
-            data-cep="{{ cliente.cep }}"
-            data-monitoramento="{{ cliente.monitoramento }}"
-            data-data_monitoramento="{{ cliente.data_monitoramento }}"
-            data-situacao_fiscal="{{ cliente.situacao_fiscal }}"
-            data-observacoes="{{ cliente.observacoes }}">
+        <tr data-id="{{ cliente.id }}" data-logradouro="{{ cliente.logradouro }}" data-numero="{{ cliente.numero }}"
+          data-bairro="{{ cliente.bairro }}" data-municipio="{{ cliente.municipio }}" data-email="{{ cliente.email }}"
+          data-telefone="{{ cliente.telefone }}" data-cep="{{ cliente.cep }}"
+          data-monitoramento="{{ cliente.monitoramento }}" data-data_monitoramento="{{ cliente.data_monitoramento }}"
+          data-situacao_fiscal="{{ cliente.situacao_fiscal }}" data-observacoes="{{ cliente.observacoes }}">
           <td>{{ cliente.id }}</td>
           <td class="nome">{{ cliente.nome }}</td>
           <td class="cnpj">{{ cliente.cnpj }}</td>
           <td class="regime">{{ cliente.regime }}</td>
-          <td class="divida">R$ {{ '{:,.2f}'.format(cliente.divida).replace(',', 'v').replace('.', ',').replace('v', '.') }}</td>
+          <td class="divida">R$ {{ '{:,.2f}'.format(cliente.divida).replace(',', 'v').replace('.', ',').replace('v',
+            '.') }}</td>
           <td class="contrato">{{ cliente.contrato }}</td>
           <td class="segmento">{{ cliente.segmento }}</td>
           <td>
@@ -151,13 +148,13 @@
           <input type="text" name="cnpj" class="form-control mb-2" placeholder="CNPJ" required>
           <input type="text" name="regime" class="form-control mb-2" placeholder="Regime" required>
           <input type="number" step="0.01" name="divida" class="form-control mb-2" placeholder="Dívida" required>
-          
+
           <label for="contrato">Contrato</label>
           <select name="contrato" class="form-control mb-2" required>
             <option value="Ativo">Ativo</option>
             <option value="Encerrado">Encerrado</option>
           </select>
-          
+
           <label for="segmento">Segmento</label>
           <select name="segmento" class="form-control mb-2" required>
             <option value="" disabled selected>Escolha um segmento</option>
@@ -168,7 +165,7 @@
             <option value="Rural">Rural</option>
             <option value="3º Setor">3º Setor</option>
           </select>
-  
+
           <!-- Campos extras já existentes -->
           <hr>
           <h6>Informações Adicionais</h6>
@@ -179,7 +176,7 @@
           <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
           <input type="text" name="telefone" class="form-control mb-2" placeholder="Telefone" required>
           <input type="text" name="cep" class="form-control mb-2" placeholder="CEP" required>
-  
+
           <!-- Novos campos -->
           <hr>
           <h6>Novas Informações</h6>
@@ -193,14 +190,14 @@
           </div>
           <input type="text" name="situacao_fiscal" class="form-control mb-2" placeholder="Situação Fiscal">
           <textarea name="observacoes" class="form-control mb-2" placeholder="Observações" rows="3"></textarea>
-  
+
           <button type="submit" class="btn btn-primary w-100">Adicionar</button>
         </form>
       </div>
     </div>
   </div>
 </div>
-  
+
 <!-- Modal de Editar Cliente (com os novos campos) -->
 <div class="modal fade" id="modalEditar" tabindex="-1">
   <div class="modal-dialog modal-xl" style="max-width: 90%;">
@@ -217,17 +214,17 @@
           <input type="text" name="cnpj" class="form-control mb-2" placeholder="CNPJ" required>
           <input type="text" name="regime" class="form-control mb-2" placeholder="Regime" required>
           <input type="number" step="0.01" name="divida" class="form-control mb-2" placeholder="Dívida" required>
-          
+
           <!-- Exibe Situação Fiscal antes de Contrato -->
           <label for="situacao_fiscal">Situação Fiscal</label>
           <input type="text" name="situacao_fiscal" class="form-control mb-2" placeholder="Situação Fiscal">
-  
+
           <label for="contrato">Contrato</label>
           <select name="contrato" class="form-control mb-2" required>
             <option value="Ativo">Ativo</option>
             <option value="Encerrado">Encerrado</option>
           </select>
-          
+
           <label for="segmento">Segmento</label>
           <select name="segmento" class="form-control mb-2" required>
             <option value="" disabled>Escolha um segmento</option>
@@ -238,7 +235,7 @@
             <option value="Rural">Rural</option>
             <option value="3º Setor">3º Setor</option>
           </select>
-  
+
           <!-- Campos extras já existentes -->
           <hr>
           <h6>Informações Adicionais</h6>
@@ -249,7 +246,7 @@
           <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
           <input type="text" name="telefone" class="form-control mb-2" placeholder="Telefone" required>
           <input type="text" name="cep" class="form-control mb-2" placeholder="CEP" required>
-  
+
           <!-- Novos campos -->
           <hr>
           <h6>Novas Informações</h6>
@@ -262,14 +259,14 @@
             <input type="date" name="data_monitoramento" class="form-control mb-2" id="data_monitoramento_edit">
           </div>
           <textarea name="observacoes" class="form-control mb-2" placeholder="Observações" rows="3"></textarea>
-  
+
           <button type="submit" class="btn btn-primary w-100">Salvar Alterações</button>
         </form>
       </div>
     </div>
   </div>
 </div>
-  
+
 <!-- Modal de Visualizar Cliente (apenas leitura) com informações extras -->
 <div class="modal fade" id="modalVisualizar" tabindex="-1">
   <div class="modal-dialog modal-xl" style="max-width: 90%;">
@@ -297,7 +294,7 @@
         <div class="mb-2"><strong>CEP:</strong> <span id="viewCEP"></span></div>
         <hr>
         <!-- Novos campos: Monitoramento, Dívida, Data e Observações -->
-        <div class="mb-2"><strong>Monitoramento:</strong> 
+        <div class="mb-2"><strong>Monitoramento:</strong>
           <span id="viewMonitoramento"></span>
         </div>
         <div class="mb-2"><strong>Dívida:</strong> <span id="viewDivida"></span></div>
@@ -307,232 +304,234 @@
     </div>
   </div>
 </div>
-  
+
 <!-- Scripts -->
 <script>
-// Função para converter data de YYYY-MM-DD para DD/MM/YYYY
-function formatDatePortuguese(dateStr) {
-  if(!dateStr) return "";
-  const parts = dateStr.split("-");
-  if(parts.length !== 3) return dateStr;
-  return parts[2] + "/" + parts[1] + "/" + parts[0];
-}
+  // Função para converter data de YYYY-MM-DD para DD/MM/YYYY
+  function formatDatePortuguese(dateStr) {
+    if (!dateStr) return "";
+    const parts = dateStr.split("-");
+    if (parts.length !== 3) return dateStr;
+    return parts[2] + "/" + parts[1] + "/" + parts[0];
+  }
 
-document.addEventListener("DOMContentLoaded", function () {
-  carregarClientes();
-  
-  // Controla exibição do campo de data no modal de adicionar
-  const monitoramentoCheckbox = document.getElementById("monitoramento");
-  const divDataMonitoramento = document.getElementById("divDataMonitoramento");
-  monitoramentoCheckbox.addEventListener("change", function(){
-    divDataMonitoramento.style.display = this.checked ? "block" : "none";
-  });
-  
-  // Controla exibição do campo de data no modal de editar
-  const monitoramentoCheckboxEdit = document.getElementById("monitoramento_edit");
-  const divDataMonitoramentoEdit = document.getElementById("divDataMonitoramento_edit");
-  monitoramentoCheckboxEdit.addEventListener("change", function(){
-    divDataMonitoramentoEdit.style.display = this.checked ? "block" : "none";
-  });
-  
-  function filterRows() {
-    let searchValue = document.getElementById("searchInput").value.toLowerCase();
-    let selectedFilters = Array.from(document.querySelectorAll('.filter-option:checked'))
-                                .map(input => input.value.toLowerCase());
-    let rows = document.querySelectorAll("#clientesTable tr");
-    rows.forEach(function (row) {
-      let rowText = row.innerText.toLowerCase();
-      // Se nenhum filtro for selecionado, ou se algum filtro for encontrado na linha, exibe a linha
-      let matchesFilters = selectedFilters.length === 0 || selectedFilters.some(filter => rowText.indexOf(filter) > -1);
-      let matchesSearch = rowText.indexOf(searchValue) > -1;
-      row.style.display = (matchesSearch && matchesFilters) ? "" : "none";
-    });
-  }
-  
-  document.getElementById("searchInput").addEventListener("keyup", filterRows);
-  document.querySelectorAll('.filter-option').forEach(input => {
-    input.addEventListener("change", filterRows);
-  });
-  
-  // Submissão do formulário de adicionar cliente
-  document.getElementById("formAdicionar").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    let formData = new FormData(this);
-    let clienteData = {
-      nome: formData.get("nome"),
-      cnpj: formData.get("cnpj"),
-      regime: formData.get("regime"),
-      divida: parseFloat(formData.get("divida")),
-      contrato: formData.get("contrato"),
-      segmento: formData.get("segmento"),
-      logradouro: formData.get("logradouro"),
-      numero: formData.get("numero"),
-      bairro: formData.get("bairro"),
-      municipio: formData.get("municipio"),
-      email: formData.get("email"),
-      telefone: formData.get("telefone"),
-      cep: formData.get("cep"),
-      monitoramento: formData.get("monitoramento") ? true : false,
-      data_monitoramento: formData.get("data_monitoramento"),
-      situacao_fiscal: formData.get("situacao_fiscal"),
-      observacoes: formData.get("observacoes")
-    };
-  
-    let response = await fetch("/admin/adicionar_cliente", {
-      method: "POST",
-      body: JSON.stringify(clienteData),
-      headers: { "Content-Type": "application/json" }
-    });
-  
-    let result = await response.json();
-    alert(result.message);
+  document.addEventListener("DOMContentLoaded", function () {
     carregarClientes();
-    filterRows();
-    let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalAdicionar"));
-    modal.hide();
-    this.reset();
-    divDataMonitoramento.style.display = "none";
-  });
-  
-  // Submissão do formulário de editar cliente
-  document.getElementById("formEditar").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    let formData = new FormData(this);
-    let clienteData = {
-      id: formData.get("id"),
-      nome: formData.get("nome"),
-      cnpj: formData.get("cnpj"),
-      regime: formData.get("regime"),
-      divida: parseFloat(formData.get("divida")),
-      contrato: formData.get("contrato"),
-      segmento: formData.get("segmento"),
-      logradouro: formData.get("logradouro"),
-      numero: formData.get("numero"),
-      bairro: formData.get("bairro"),
-      municipio: formData.get("municipio"),
-      email: formData.get("email"),
-      telefone: formData.get("telefone"),
-      cep: formData.get("cep"),
-      monitoramento: formData.get("monitoramento") ? true : false,
-      data_monitoramento: formData.get("data_monitoramento"),
-      situacao_fiscal: formData.get("situacao_fiscal"),
-      observacoes: formData.get("observacoes")
-    };
-  
-    let response = await fetch(`/admin/editar_cliente/${clienteData.id}`, {
-      method: "POST",
-      body: JSON.stringify(clienteData),
-      headers: { "Content-Type": "application/json" }
+
+    // Controla exibição do campo de data no modal de adicionar
+    const monitoramentoCheckbox = document.getElementById("monitoramento");
+    const divDataMonitoramento = document.getElementById("divDataMonitoramento");
+    monitoramentoCheckbox.addEventListener("change", function () {
+      divDataMonitoramento.style.display = this.checked ? "block" : "none";
     });
-  
-    let result = await response.json();
-    alert(result.message);
-    carregarClientes();
-    filterRows();
-    let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalEditar"));
-    modal.hide();
-  });
-  
-  async function carregarClientes() {
-    let response = await fetch('/admin/clientes_cadastrados');
-    let data = await response.text();
-    let parser = new DOMParser();
-    let newDoc = parser.parseFromString(data, 'text/html');
-    let newTable = newDoc.getElementById("clientesTable").innerHTML;
-    document.getElementById("clientesTable").innerHTML = newTable;
-  }
-  
-  document.addEventListener("click", async function (event) {
-    if (event.target.closest(".delete-btn")) {
-      let row = event.target.closest("tr");
-      let id = row.dataset.id;
-      if (confirm(`Tem certeza que deseja excluir o cliente ID ${id}?`)) {
-        let response = await fetch(`/admin/excluir_cliente/${id}`, { method: "POST" });
-        let result = await response.json();
-        alert(result.message);
-        if(result.success) {
-          row.remove();
+
+    // Controla exibição do campo de data no modal de editar
+    const monitoramentoCheckboxEdit = document.getElementById("monitoramento_edit");
+    const divDataMonitoramentoEdit = document.getElementById("divDataMonitoramento_edit");
+    monitoramentoCheckboxEdit.addEventListener("change", function () {
+      divDataMonitoramentoEdit.style.display = this.checked ? "block" : "none";
+    });
+
+    function filterRows() {
+      let searchValue = document.getElementById("searchInput").value.toLowerCase();
+      let selectedFilters = Array.from(document.querySelectorAll('.filter-option:checked'))
+        .map(input => input.value.toLowerCase());
+      let rows = document.querySelectorAll("#clientesTable tr");
+      rows.forEach(function (row) {
+        let rowText = row.innerText.toLowerCase();
+        // Se nenhum filtro for selecionado, ou se algum filtro for encontrado na linha, exibe a linha
+        let matchesFilters = selectedFilters.length === 0 || selectedFilters.some(filter => rowText.indexOf(filter) > -1);
+        let matchesSearch = rowText.indexOf(searchValue) > -1;
+        row.style.display = (matchesSearch && matchesFilters) ? "" : "none";
+      });
+    }
+
+    document.getElementById("searchInput").addEventListener("keyup", filterRows);
+    document.querySelectorAll('.filter-option').forEach(input => {
+      input.addEventListener("change", filterRows);
+    });
+
+    // Submissão do formulário de adicionar cliente
+    document.getElementById("formAdicionar").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      let formData = new FormData(this);
+      let clienteData = {
+        nome: formData.get("nome"),
+        cnpj: formData.get("cnpj"),
+        regime: formData.get("regime"),
+        divida: parseFloat(formData.get("divida")),
+        contrato: formData.get("contrato"),
+        segmento: formData.get("segmento"),
+        logradouro: formData.get("logradouro"),
+        numero: formData.get("numero"),
+        bairro: formData.get("bairro"),
+        municipio: formData.get("municipio"),
+        email: formData.get("email"),
+        telefone: formData.get("telefone"),
+        cep: formData.get("cep"),
+        monitoramento: formData.get("monitoramento") ? true : false,
+        data_monitoramento: formData.get("data_monitoramento"),
+        situacao_fiscal: formData.get("situacao_fiscal"),
+        observacoes: formData.get("observacoes")
+      };
+
+      let response = await fetch("/admin/adicionar_cliente", {
+        method: "POST",
+        body: JSON.stringify(clienteData),
+        headers: { "Content-Type": "application/json" }
+      });
+
+      let result = await response.json();
+      alert(result.message);
+      carregarClientes();
+      filterRows();
+      let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalAdicionar"));
+      modal.hide();
+      this.reset();
+      divDataMonitoramento.style.display = "none";
+    });
+
+    // Submissão do formulário de editar cliente
+    document.getElementById("formEditar").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      let formData = new FormData(this);
+      let clienteData = {
+        id: formData.get("id"),
+        nome: formData.get("nome"),
+        cnpj: formData.get("cnpj"),
+        regime: formData.get("regime"),
+        divida: parseFloat(formData.get("divida")),
+        contrato: formData.get("contrato"),
+        segmento: formData.get("segmento"),
+        logradouro: formData.get("logradouro"),
+        numero: formData.get("numero"),
+        bairro: formData.get("bairro"),
+        municipio: formData.get("municipio"),
+        email: formData.get("email"),
+        telefone: formData.get("telefone"),
+        cep: formData.get("cep"),
+        monitoramento: formData.get("monitoramento") ? true : false,
+        data_monitoramento: formData.get("data_monitoramento"),
+        situacao_fiscal: formData.get("situacao_fiscal"),
+        observacoes: formData.get("observacoes")
+      };
+
+      let response = await fetch(`/admin/editar_cliente/${clienteData.id}`, {
+        method: "POST",
+        body: JSON.stringify(clienteData),
+        headers: { "Content-Type": "application/json" }
+      });
+
+      let result = await response.json();
+      alert(result.message);
+      carregarClientes();
+      filterRows();
+      let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalEditar"));
+      modal.hide();
+    });
+
+    async function carregarClientes() {
+      let response = await fetch('/admin/clientes_cadastrados');
+      let data = await response.text();
+      let parser = new DOMParser();
+      let newDoc = parser.parseFromString(data, 'text/html');
+      let newTable = newDoc.getElementById("clientesTable").innerHTML;
+      document.getElementById("clientesTable").innerHTML = newTable;
+    }
+
+    document.addEventListener("click", async function (event) {
+      if (event.target.closest(".delete-btn")) {
+        let row = event.target.closest("tr");
+        let id = row.dataset.id;
+        if (confirm(`Tem certeza que deseja excluir o cliente ID ${id}?`)) {
+          let response = await fetch(`/admin/excluir_cliente/${id}`, { method: "POST" });
+          let result = await response.json();
+          alert(result.message);
+          if (result.success) {
+            row.remove();
+          }
         }
       }
-    }
-  });
-  
-  document.addEventListener("click", function (event) {
-    if (event.target.closest(".edit-btn")) {
-      let tr = event.target.closest("tr");
-      let id = tr.dataset.id;
-      let formEditar = document.getElementById("formEditar");
-      formEditar.querySelector('input[name="id"]').value = id;
-      formEditar.nome.value = tr.querySelector(".nome").innerText;
-      formEditar.cnpj.value = tr.querySelector(".cnpj").innerText;
-      formEditar.regime.value = tr.querySelector(".regime").innerText;
-      let dividaText = tr.querySelector(".divida").innerText;
-      formEditar.divida.value = parseFloat(dividaText.replace("R$ ", "").replace(",", "."));
-      formEditar.contrato.value = tr.querySelector(".contrato").innerText;
-      formEditar.segmento.value = tr.querySelector(".segmento").innerText;
-  
-      // Preencher campos extras do modal de editar
-      formEditar.logradouro.value = tr.dataset.logradouro;
-      formEditar.numero.value = tr.dataset.numero;
-      formEditar.bairro.value = tr.dataset.bairro;
-      formEditar.municipio.value = tr.dataset.municipio;
-      formEditar.email.value = tr.dataset.email;
-      formEditar.telefone.value = tr.dataset.telefone;
-      formEditar.cep.value = tr.dataset.cep;
-  
-      // Novos campos
-      let monitoramento = tr.dataset.monitoramento === "True" || tr.dataset.monitoramento === "true" || tr.dataset.monitoramento === "1";
-      formEditar.monitoramento.checked = monitoramento;
-      if(monitoramento){
-        document.getElementById("divDataMonitoramento_edit").style.display = "block";
-        formEditar.data_monitoramento.value = tr.dataset.data_monitoramento;
-      } else {
-        document.getElementById("divDataMonitoramento_edit").style.display = "none";
+    });
+
+    document.addEventListener("click", function (event) {
+      if (event.target.closest(".edit-btn")) {
+        let tr = event.target.closest("tr");
+        let id = tr.dataset.id;
+        let formEditar = document.getElementById("formEditar");
+        formEditar.querySelector('input[name="id"]').value = id;
+        formEditar.nome.value = tr.querySelector(".nome").innerText;
+        formEditar.cnpj.value = tr.querySelector(".cnpj").innerText;
+        formEditar.regime.value = tr.querySelector(".regime").innerText;
+        let dividaText = tr.querySelector(".divida").innerText;
+        formEditar.divida.value = parseFloat(
+          dividaText.replace("R$ ", "").replace(/\./g, "").replace(",", ".")
+        );
+        formEditar.contrato.value = tr.querySelector(".contrato").innerText;
+        formEditar.segmento.value = tr.querySelector(".segmento").innerText;
+
+        // Preencher campos extras do modal de editar
+        formEditar.logradouro.value = tr.dataset.logradouro;
+        formEditar.numero.value = tr.dataset.numero;
+        formEditar.bairro.value = tr.dataset.bairro;
+        formEditar.municipio.value = tr.dataset.municipio;
+        formEditar.email.value = tr.dataset.email;
+        formEditar.telefone.value = tr.dataset.telefone;
+        formEditar.cep.value = tr.dataset.cep;
+
+        // Novos campos
+        let monitoramento = tr.dataset.monitoramento === "True" || tr.dataset.monitoramento === "true" || tr.dataset.monitoramento === "1";
+        formEditar.monitoramento.checked = monitoramento;
+        if (monitoramento) {
+          document.getElementById("divDataMonitoramento_edit").style.display = "block";
+          formEditar.data_monitoramento.value = tr.dataset.data_monitoramento;
+        } else {
+          document.getElementById("divDataMonitoramento_edit").style.display = "none";
+        }
+        formEditar.situacao_fiscal.value = tr.dataset.situacao_fiscal;
+        formEditar.observacoes.value = tr.dataset.observacoes;
+
+        let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalEditar"));
+        modal.show();
       }
-      formEditar.situacao_fiscal.value = tr.dataset.situacao_fiscal;
-      formEditar.observacoes.value = tr.dataset.observacoes;
-  
-      let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalEditar"));
-      modal.show();
-    }
+    });
+
+    document.addEventListener("click", function (event) {
+      if (event.target.closest(".view-btn")) {
+        let tr = event.target.closest("tr");
+        document.getElementById("viewNome").innerText = tr.querySelector(".nome").innerText;
+        document.getElementById("viewCNPJ").innerText = tr.querySelector(".cnpj").innerText;
+        document.getElementById("viewRegime").innerText = tr.querySelector(".regime").innerText;
+        // Removemos Dívida daqui, pois será exibida abaixo de Monitoramento
+        // document.getElementById("viewDivida").innerText = tr.querySelector(".divida").innerText;
+        document.getElementById("viewSituacaoFiscal").innerText = tr.dataset.situacao_fiscal;
+        document.getElementById("viewContrato").innerText = tr.querySelector(".contrato").innerText;
+        document.getElementById("viewSegmento").innerText = tr.querySelector(".segmento").innerText;
+
+        document.getElementById("viewLogradouro").innerText = tr.dataset.logradouro;
+        document.getElementById("viewNumero").innerText = tr.dataset.numero;
+        document.getElementById("viewBairro").innerText = tr.dataset.bairro;
+        document.getElementById("viewMunicipio").innerText = tr.dataset.municipio;
+        document.getElementById("viewEmail").innerText = tr.dataset.email;
+        document.getElementById("viewTelefone").innerText = tr.dataset.telefone;
+        document.getElementById("viewCEP").innerText = tr.dataset.cep;
+
+        // Exibe Monitoramento como "Ativo" ou "Inativo"
+        let monitoramentoDisplay = (tr.dataset.monitoramento === "True" || tr.dataset.monitoramento === "true" || tr.dataset.monitoramento === "1") ? "Ativo" : "Inativo";
+        document.getElementById("viewMonitoramento").innerText = monitoramentoDisplay;
+
+        // Agora exibe Dívida abaixo de Monitoramento
+        document.getElementById("viewDivida").innerText = tr.querySelector(".divida").innerText;
+
+        // Formata a data para o formato DD/MM/YYYY
+        document.getElementById("viewDataMonitoramento").innerText = formatDatePortuguese(tr.dataset.data_monitoramento);
+        document.getElementById("viewObservacoes").innerText = tr.dataset.observacoes;
+
+        let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalVisualizar"));
+        modal.show();
+      }
+    });
   });
-  
-  document.addEventListener("click", function (event) {
-    if (event.target.closest(".view-btn")) {
-      let tr = event.target.closest("tr");
-      document.getElementById("viewNome").innerText = tr.querySelector(".nome").innerText;
-      document.getElementById("viewCNPJ").innerText = tr.querySelector(".cnpj").innerText;
-      document.getElementById("viewRegime").innerText = tr.querySelector(".regime").innerText;
-      // Removemos Dívida daqui, pois será exibida abaixo de Monitoramento
-      // document.getElementById("viewDivida").innerText = tr.querySelector(".divida").innerText;
-      document.getElementById("viewSituacaoFiscal").innerText = tr.dataset.situacao_fiscal;
-      document.getElementById("viewContrato").innerText = tr.querySelector(".contrato").innerText;
-      document.getElementById("viewSegmento").innerText = tr.querySelector(".segmento").innerText;
-  
-      document.getElementById("viewLogradouro").innerText = tr.dataset.logradouro;
-      document.getElementById("viewNumero").innerText = tr.dataset.numero;
-      document.getElementById("viewBairro").innerText = tr.dataset.bairro;
-      document.getElementById("viewMunicipio").innerText = tr.dataset.municipio;
-      document.getElementById("viewEmail").innerText = tr.dataset.email;
-      document.getElementById("viewTelefone").innerText = tr.dataset.telefone;
-      document.getElementById("viewCEP").innerText = tr.dataset.cep;
-  
-      // Exibe Monitoramento como "Ativo" ou "Inativo"
-      let monitoramentoDisplay = (tr.dataset.monitoramento === "True" || tr.dataset.monitoramento === "true" || tr.dataset.monitoramento === "1") ? "Ativo" : "Inativo";
-      document.getElementById("viewMonitoramento").innerText = monitoramentoDisplay;
-  
-      // Agora exibe Dívida abaixo de Monitoramento
-      document.getElementById("viewDivida").innerText = tr.querySelector(".divida").innerText;
-  
-      // Formata a data para o formato DD/MM/YYYY
-      document.getElementById("viewDataMonitoramento").innerText = formatDatePortuguese(tr.dataset.data_monitoramento);
-      document.getElementById("viewObservacoes").innerText = tr.dataset.observacoes;
-  
-      let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalVisualizar"));
-      modal.show();
-    }
-  });
-});
 </script>
 
 {% endblock %}

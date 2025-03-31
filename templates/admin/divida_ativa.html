@@ -1,220 +1,334 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoramento de Dívidas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        [data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            white-space: nowrap;
+            transform: translateY(-150%);
+            z-index: 9999;
+        }
+    </style>
 </head>
 
-<body class="bg-gray-100">
+<body class="bg-gray-100 min-h-screen">
     <div class="p-6 max-w-7xl mx-auto">
         <!-- Topo -->
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
             <a href="{{ url_for('admin.index') }}">
-                <img src="{{ url_for('static', filename='imagens/patrimonialis_logo.jpeg') }}" alt="Logo" class="h-12">
+                <img src="{{ url_for('static', filename='imagens/patrimonialis_logo.jpeg') }}" alt="Logo"
+                    class="h-12 rounded-full shadow-md">
             </a>
-            <h1 class="text-4xl font-bold text-center text-blue-800 w-full flex items-center justify-center gap-2">
+            <h1 class="text-4xl font-extrabold text-blue-800 text-center flex items-center justify-center gap-3 w-full">
                 <i class="fas fa-money-check-alt"></i> Monitoramento de Dívidas
             </h1>
         </div>
 
         <!-- Última atualização -->
-        <div class="text-sm text-gray-600 mb-4">📅 Última atualização: {{ data_atualizacao }}</div>
+        <div class="text-sm text-gray-600 mb-4 flex items-center gap-2">
+            <i class="fas fa-calendar-alt"></i>
+            <span>📅 Última atualização: {{ data_atualizacao }}</span>
+        </div>
 
-        <!-- Cliente Selecionado Banner -->
+        <!-- Cliente selecionado -->
         <div id="clienteSelecionadoBanner" class="hidden mb-4">
             <h2 class="text-2xl font-bold text-blue-700">👤 <span id="nomeClienteSelecionado"></span></h2>
         </div>
 
         <!-- Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6" id="cardsResumo">
-            <div class="bg-white shadow-xl rounded-2xl p-6 text-center transition-all duration-200 hover:scale-[1.02]" id="cardTotalDividaWrapper">
-                <p class="text-gray-500 text-lg mb-1">Total de Dívidas Ativas</p>
-                <p class="text-3xl font-bold text-gray-800" id="cardTotalDivida" data-original="{{ '%.2f'|format(total_dividas if total_dividas is defined else 0.0) }}">R$ {{ '%.2f'|format(total_dividas if total_dividas is defined else 0.0) }}</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6" id="cardsResumo">
+            {% set cards = [
+            {'id': 'cardTotalDivida', 'label': 'Total de Dívidas Ativas', 'valor': total_dividas, 'color':
+            'text-gray-800', 'wrapper': 'cardTotalDividaWrapper', 'tooltip': 'Soma das dívidas cadastradas', 'icon':
+            'fas fa-file-invoice-dollar'},
+            {'id': '', 'label': 'Total de Dívidas em Cobrança', 'valor': '--', 'color': 'text-red-500', 'wrapper': '',
+            'tooltip': 'Ainda não implementado', 'icon': 'fas fa-exclamation-circle'},
+            {'id': 'cardTotalPago', 'label': 'Suspensas', 'valor': total_pago, 'color': 'text-green-600', 'wrapper':
+            'cardTotalPagoWrapper', 'tooltip': 'Pagamentos em suspensão ou em análise', 'icon': 'fas fa-pause-circle'},
+            {'id': 'cardBaixadas', 'label': 'Dívidas Baixadas', 'valor': total_baixadas, 'color': 'text-yellow-500',
+            'wrapper': 'cardBaixadasWrapper', 'tooltip': 'Pagas integralmente', 'icon': 'fas fa-check-circle'}
+            ] %}
+            {% for card in cards %}
+            <div class="bg-white shadow-xl rounded-2xl p-6 text-center transition hover:scale-[1.02] relative" {% if
+                card.wrapper %}id="{{ card.wrapper }}" {% endif %} data-tooltip="{{ card.tooltip }}">
+                <div class="text-gray-500 text-lg mb-2 flex justify-center items-center gap-2">
+                    <i class="{{ card.icon }}"></i>
+                    {{ card.label }}
+                </div>
+                <p class="text-3xl font-bold {{ card.color }}" {% if card.id %}id="{{ card.id }}"
+                    data-original="{{ '%.2f'|format(card.valor if card.valor is defined and card.valor != '--' else 0.0) }}"
+                    {% endif %}>
+                    {% if card.valor != '--' %}R$ {{ '%.2f'|format(card.valor if card.valor is defined else 0.0) }}{%
+                    else %}<span class="text-sm italic">Sem dados</span>{% endif %}
+                </p>
             </div>
-            <div class="bg-white shadow-xl rounded-2xl p-6 text-center">
-                <p class="text-gray-500 text-lg mb-1">Total de Dívidas em Cobrança</p>
-                <p class="text-3xl font-bold text-red-500">--</p>
-            </div>
-            <div class="bg-white shadow-xl rounded-2xl p-6 text-center transition-all duration-200 hover:scale-[1.02]" id="cardTotalPagoWrapper">
-                <p class="text-gray-500 text-lg mb-1">Suspensas</p>
-                <p class="text-3xl font-bold text-green-600" id="cardTotalPago" data-original="{{ '%.2f'|format(total_pago if total_pago is defined else 0.0) }}">R$ {{ '%.2f'|format(total_pago if total_pago is defined else 0.0) }}</p>
-            </div>
-            <div class="bg-white shadow-xl rounded-2xl p-6 text-center transition-all duration-200 hover:scale-[1.02]" id="cardBaixadasWrapper">
-                <p class="text-gray-500 text-lg mb-1">Dívidas Baixadas</p>
-                <p class="text-3xl font-bold text-yellow-500" id="cardBaixadas" data-original="0.00">R$ 0.00</p>
-            </div>
+            {% endfor %}
         </div>
 
-        <!-- Exportar dados -->
-        <div class="mb-4">
-            <button onclick="exportarTabela()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">
-                <i class="fas fa-file-export mr-2"></i>Exportar para Excel
+        <!-- Ações -->
+        <div class="flex flex-col sm:flex-row gap-2 mb-4 items-stretch sm:items-center">
+            <button onclick="exportarTabela()"
+                class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 flex items-center gap-2">
+                <i class="fas fa-file-excel"></i> Exportar para Excel
             </button>
+            <div class="relative w-full">
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="search" oninput="filtrarClientes()"
+                    placeholder="Pesquisar cliente por nome ou ID..."
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
         </div>
-
-        <!-- Pesquisa -->
-        <div class="mb-4">
-            <input type="text" id="search" oninput="filtrarClientes()" placeholder="Pesquisar cliente..."
-                class="px-4 py-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-
         <!-- Tabela -->
         <div class="bg-white shadow-md rounded-2xl overflow-x-auto mb-6">
             <table class="min-w-full text-sm" id="clientesTabela">
                 <thead class="bg-gray-700 text-white">
                     <tr>
-                        <th class="px-4 py-3 text-left">Cliente</th>
-                        <th class="px-4 py-3 text-left">Valor Total</th>
-                        <th class="px-4 py-3 text-left">Valor Pago</th>
-                        <th class="px-4 py-3 text-left">Em Aberto</th>
+                        <th class="px-4 py-3 text-left">ID</th>
+                        <th class="px-4 py-3 text-left">Nome</th>
+                        <th class="px-4 py-3 text-left">CNPJ</th>
+                        <th class="px-4 py-3 text-left">Regime</th>
+                        <th class="px-4 py-3 text-left">Contrato</th>
                         <th class="px-4 py-3 text-left">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for cliente in clientes %}
                     {% set valor_pago = cliente.dividas | map(attribute='valor_pago') | sum %}
-                    {% set em_aberto = (cliente.divida or 0) - valor_pago %}
-                    {% set baixadas = valor_pago if valor_pago == (cliente.divida or 0) and valor_pago > 0 else 0 %}
                     <tr class="border-t even:bg-gray-50 cliente-row cursor-pointer hover:bg-gray-100"
-                        data-id="{{ cliente.id }}"
-                        data-nome="{{ cliente.nome }}"
+                        data-id="{{ cliente.id }}" data-nome="{{ cliente.nome }}"
                         data-divida-total="R$ {{ '%.2f'|format(cliente.divida or 0) }}"
                         data-pago="R$ {{ '%.2f'|format(valor_pago) }}"
-                        data-baixadas="R$ {{ '%.2f'|format(baixadas) }}"
+                        data-baixadas="R$ {{ '%.2f'|format(valor_pago if valor_pago == (cliente.divida or 0) and valor_pago > 0 else 0) }}"
                         onclick="filtrarPorCliente(this)">
-                        <td class="px-4 py-3 font-medium">{{ cliente.nome }}</td>
-                        <td class="px-4 py-3">R$ {{ '%.2f'|format(cliente.divida or 0) }}</td>
-                        <td class="px-4 py-3 text-green-600">R$ {{ '%.2f'|format(valor_pago) }}</td>
-                        <td class="px-4 py-3 text-yellow-500">R$ {{ '%.2f'|format(em_aberto) }}</td>
-                        <td class="px-4 py-3 space-x-1">
-                            <button title="Visualizar" class="bg-cyan-400 hover:bg-cyan-500 text-white font-bold py-2 px-2 rounded shadow"
-                                onclick="abrirModal({{ cliente.id }}, '{{ cliente.nome }}', '{{ '%.2f'|format(cliente.divida or 0) }}', '{{ '%.2f'|format(valor_pago) }}')">
+                        <td class="px-4 py-3">{{ cliente.id }}</td>
+                        <td class="px-4 py-3">{{ cliente.nome }}</td>
+                        <td class="px-4 py-3">{{ cliente.cnpj }}</td>
+                        <td class="px-4 py-3">{{ cliente.regime }}</td>
+                        <td class="px-4 py-3">
+                            {% if cliente.contrato == 'Ativo' %}
+                            <span class="text-green-600 font-bold">{{ cliente.contrato }}</span>
+                            {% else %}
+                            <span class="text-red-500 font-semibold">{{ cliente.contrato }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 space-x-1 whitespace-nowrap">
+                            <button title="Visualizar"
+                                class="bg-cyan-400 hover:bg-cyan-500 text-white font-bold py-2 px-2 rounded shadow"
+                                onclick="event.stopPropagation(); abrirModal({{ cliente.id }}, {{ cliente.nome|tojson }}, {{ ('%.2f'|format(cliente.divida or 0))|tojson }}, {{ ('%.2f'|format(valor_pago))|tojson }})">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button title="Simular Pagamento" class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-2 px-2 rounded shadow"
+                            <button title="Simular Pagamento"
+                                class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-2 px-2 rounded shadow"
                                 onclick="abrirSimulacao({{ cliente.id }})">
                                 <i class="fas fa-coins"></i>
                             </button>
-                            <button title="Excluir" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-2 rounded shadow">
+                            <button title="Excluir"
+                                class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-2 rounded shadow">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
+                </tbody>
             </table>
         </div>
-    </div>
-
-    <!-- Modal de Detalhes do Cliente (Optional) -->
-    <div id="modalCliente" class="hidden fixed inset-0 bg-black bg-opacity-50 justify-center items-center z-50">
-        <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-blue-700">Detalhes do Cliente</h2>
-                <button onclick="fecharModal()" class="text-red-500 hover:text-red-700">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
+        <!-- Modal Detalhes do Cliente (Visualizar) -->
+        <div id="modalCliente" class="hidden fixed inset-0 bg-black bg-opacity-50 justify-center items-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-blue-700">Detalhes do Cliente</h2>
+                    <button onclick="fecharModal()" class="text-red-500 hover:text-red-700">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <div id="clienteDetalhes" class="space-y-2 text-gray-800 text-sm">
+                    <!-- Detalhes preenchidos via JS -->
+                </div>
             </div>
-            <div id="clienteDetalhes"></div>
         </div>
-    </div>
+        <!-- Modal Simulação de Pagamento -->
+        <div id="modalSimulacao" class="hidden fixed inset-0 bg-black bg-opacity-50 justify-center items-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-green-700">Simular Pagamento</h2>
+                    <button onclick="fecharSimulacao()" class="text-red-500 hover:text-red-700">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <p><strong>Cliente:</strong> <span id="simulacaoNome"></span></p>
+                    <p><strong>Valor em aberto:</strong> R$ <span id="simulacaoAberto"></span></p>
 
-    <!-- Scripts JS -->
-    <script>
-        let clienteSelecionado = false;
+                    <div>
+                        <label for="valorPagamento" class="block mb-1 font-medium">Valor a pagar</label>
+                        <input type="number" step="0.01" id="valorPagamento"
+                            class="w-full border px-4 py-2 rounded shadow-sm">
+                    </div>
 
-        function filtrarClientes() {
-            const termo = document.getElementById('search').value.toLowerCase();
-            document.querySelectorAll('.cliente-row').forEach(row => {
-                const nome = row.dataset.nome.toLowerCase();
-                row.style.display = nome.includes(termo) ? '' : 'none';
-            });
-        }
+                    <div class="bg-gray-100 p-4 rounded">
+                        <p class="text-sm text-gray-700">💡 Após pagamento, o valor restante será: <span
+                                id="valorRestante">R$ 0,00</span></p>
+                    </div>
 
-        function filtrarPorCliente(row) {
-            // Get client data from row dataset
-            const dividaTotal = row.dataset.dividaTotal;
-            const pago = row.dataset.pago;
-            const baixadas = row.dataset.baixadas;
+                    <button onclick="calcularSimulacao()"
+                        class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700">Simular</button>
+                </div>
+            </div>
+        </div>
 
-            // Update card values
-            document.getElementById('cardTotalDivida').textContent = dividaTotal;
-            document.getElementById('cardTotalPago').textContent = pago;
-            document.getElementById('cardBaixadas').textContent = baixadas;
-
-            // Add highlighting to cards
-            document.getElementById('cardTotalDividaWrapper').classList.add('ring-2', 'ring-blue-400');
-            document.getElementById('cardTotalPagoWrapper').classList.add('ring-2', 'ring-green-400');
-            document.getElementById('cardBaixadasWrapper').classList.add('ring-2', 'ring-yellow-400');
-
-            // Show client name banner
-            const clienteNome = row.dataset.nome;
-            document.getElementById('nomeClienteSelecionado').textContent = clienteNome;
-            document.getElementById('clienteSelecionadoBanner').classList.remove('hidden');
-
-            // Set client selected state
-            clienteSelecionado = true;
-        }
-
-        function resetarTotais() {
-            // Restore original values from data-original attribute
-            document.getElementById('cardTotalDivida').textContent = 
-                `R$ ${parseFloat(document.getElementById('cardTotalDivida').dataset.original).toFixed(2)}`;
-            document.getElementById('cardTotalPago').textContent = 
-                `R$ ${parseFloat(document.getElementById('cardTotalPago').dataset.original).toFixed(2)}`;
-            document.getElementById('cardBaixadas').textContent = 
-                `R$ ${parseFloat(document.getElementById('cardBaixadas').dataset.original).toFixed(2)}`;
-
-            // Remove highlighting from cards
-            document.getElementById('cardTotalDividaWrapper').classList.remove('ring-2', 'ring-blue-400');
-            document.getElementById('cardTotalPagoWrapper').classList.remove('ring-2', 'ring-green-400');
-            document.getElementById('cardBaixadasWrapper').classList.remove('ring-2', 'ring-yellow-400');
-
-            // Hide client name banner
-            document.getElementById('clienteSelecionadoBanner').classList.add('hidden');
-
-            // Reset client selected state
-            clienteSelecionado = false;
-        }
-
-        // Event listener to handle clicks outside the table and cards
-        document.addEventListener('click', function (e) {
-            const cardsResumo = document.getElementById('cardsResumo');
-            const clientesTabela = document.getElementById('clientesTabela');
-
-            // Check if click is outside cards and table, and a client is currently selected
-            if (!cardsResumo.contains(e.target) && 
-                !clientesTabela.contains(e.target) && 
-                clienteSelecionado) {
-                resetarTotais();
-            }
-        });
-
-        function abrirModal(id, nome, total, pago) {
-            const aberto = (parseFloat(total) - parseFloat(pago)).toFixed(2);
-            document.getElementById('clienteDetalhes').innerHTML = `
-                <p><strong>Nome:</strong> ${nome}</p>
-                <p><strong>Valor Total:</strong> R$ ${parseFloat(total).toFixed(2)}</p>
-                <p><strong>Valor Pago:</strong> R$ ${parseFloat(pago).toFixed(2)}</p>
-                <p><strong>Em Aberto:</strong> R$ ${aberto}</p>`;
-            document.getElementById('modalCliente').classList.remove('hidden');
-            document.getElementById('modalCliente').classList.add('flex');
-        }
-
-        function fecharModal() {
-            document.getElementById('modalCliente').classList.add('hidden');
-        }
-
-        function exportarTabela() {
-            alert('Exportação para Excel em desenvolvimento...');
-        }
-
-        function abrirSimulacao(id) {
-            alert('Simulação de pagamento em desenvolvimento...');
-        }
-    </script>
 </body>
+<!-- Scripts -->
+<script>
+    let clienteSelecionado = false;
+    function filtrarClientes() {
+        const termo = document.getElementById('search').value.toLowerCase();
+        document.querySelectorAll('.cliente-row').forEach(row => {
+            const nome = row.dataset.nome.toLowerCase();
+            const id = row.dataset.id.toString(); // converte ID para string
+            const corresponde = nome.includes(termo) || id.includes(termo);
+            row.style.display = corresponde ? '' : 'none';
+        });
+    }
+    function filtrarPorCliente(row) {
+        const dividaTotal = row.dataset.dividaTotal;
+        const pago = row.dataset.pago;
+        const baixadas = row.dataset.baixadas;
+
+        document.getElementById('cardTotalDivida').textContent = dividaTotal;
+        document.getElementById('cardTotalPago').textContent = pago;
+        document.getElementById('cardBaixadas').textContent = baixadas;
+
+        document.getElementById('cardTotalDividaWrapper').classList.add('ring-2', 'ring-blue-400');
+        document.getElementById('cardTotalPagoWrapper').classList.add('ring-2', 'ring-green-400');
+        document.getElementById('cardBaixadasWrapper').classList.add('ring-2', 'ring-yellow-400');
+
+        document.getElementById('nomeClienteSelecionado').textContent = row.dataset.nome;
+        document.getElementById('clienteSelecionadoBanner').classList.remove('hidden');
+
+        clienteSelecionado = true;
+    }
+
+    function resetarTotais() {
+        document.getElementById('cardTotalDivida').textContent =
+            `R$ ${parseFloat(document.getElementById('cardTotalDivida').dataset.original).toFixed(2)}`;
+        document.getElementById('cardTotalPago').textContent =
+            `R$ ${parseFloat(document.getElementById('cardTotalPago').dataset.original).toFixed(2)}`;
+        document.getElementById('cardBaixadas').textContent =
+            `R$ ${parseFloat(document.getElementById('cardBaixadas').dataset.original).toFixed(2)}`;
+
+        document.getElementById('cardTotalDividaWrapper').classList.remove('ring-2', 'ring-blue-400');
+        document.getElementById('cardTotalPagoWrapper').classList.remove('ring-2', 'ring-green-400');
+        document.getElementById('cardBaixadasWrapper').classList.remove('ring-2', 'ring-yellow-400');
+
+        document.getElementById('clienteSelecionadoBanner').classList.add('hidden');
+        clienteSelecionado = false;
+    }
+
+    document.addEventListener('click', function (e) {
+        const cardsResumo = document.getElementById('cardsResumo');
+        const clientesTabela = document.getElementById('clientesTabela');
+
+        if (!cardsResumo.contains(e.target) && !clientesTabela.contains(e.target) && clienteSelecionado) {
+            resetarTotais();
+        }
+    });
+
+    function abrirModal(id, nome, total, pago) {
+        const cliente = {
+            nome: nome,
+            total: parseFloat(total),
+            pago: parseFloat(pago),
+            status: 'Ativa',
+            ultimo_pagamento: '-',
+            observacao: ''
+        };
+        document.getElementById('clienteDetalhes').innerHTML = `
+    <p><strong>Nome:</strong> ${cliente.nome}</p>
+    <p><strong>Valor Total:</strong> R$ ${cliente.total.toFixed(2)}</p>
+    <p><strong>Valor Pago:</strong> R$ ${cliente.pago.toFixed(2)}</p>
+    <p><strong>Em Aberto:</strong> R$ ${(cliente.total - cliente.pago).toFixed(2)}</p>
+    <p><strong>Status:</strong> ${cliente.status}</p>
+    <p><strong>Último Pagamento:</strong> ${cliente.ultimo_pagamento}</p>
+    <p><strong>Observações:</strong> ${cliente.observacao || 'Nenhuma'}</p>
+  `;
+        document.getElementById('modalCliente').classList.remove('hidden');
+        document.getElementById('modalCliente').classList.add('flex');
+    }
+
+    function abrirSimulacao(id) {
+        const row = document.querySelector(`tr[data-id='${id}']`);
+        const nome = row.dataset.nome;
+        const emAberto = parseFloat(row.dataset.emAberto);
+
+        document.getElementById('simulacaoNome').textContent = nome;
+        document.getElementById('simulacaoAberto').textContent = emAberto.toFixed(2);
+        document.getElementById('valorPagamento').value = '';
+        document.getElementById('valorRestante').textContent = 'R$ 0,00';
+        document.getElementById('modalSimulacao').classList.remove('hidden');
+        document.getElementById('modalSimulacao').classList.add('flex');
+    }
+
+    function calcularSimulacao() {
+        const valorPago = parseFloat(document.getElementById('valorPagamento').value || 0);
+        const emAberto = parseFloat(document.getElementById('simulacaoAberto').textContent);
+        const restante = Math.max(emAberto - valorPago, 0);
+        document.getElementById('valorRestante').textContent = `R$ ${restante.toFixed(2)}`;
+    }
+
+    function fecharModal() {
+        document.getElementById('modalCliente').classList.add('hidden');
+    }
+
+    function fecharSimulacao() {
+        document.getElementById('modalSimulacao').classList.add('hidden');
+    }
+    function abrirModal(id, nome, total, pago) {
+        const row = document.querySelector(`tr[data-id='${id}']`);
+
+        const cliente = {
+            nome: nome,
+            cnpj: row.querySelector('td:nth-child(3)').innerText,
+            regime: row.querySelector('td:nth-child(4)').innerText,
+            contrato: row.querySelector('td:nth-child(5)').innerText,
+            total: parseFloat(total),
+            pago: parseFloat(pago),
+            emAberto: parseFloat(total) - parseFloat(pago),
+            status: 'Ativa',
+            ultimo_pagamento: '-',
+            observacao: 'Nenhuma'
+        };
+        document.getElementById('clienteDetalhes').innerHTML = `
+        <p><strong>ID:</strong> ${id}</p>
+        <p><strong>Nome:</strong> ${cliente.nome}</p>
+        <p><strong>CNPJ:</strong> ${cliente.cnpj}</p>
+        <p><strong>Regime:</strong> ${cliente.regime}</p>
+        <p><strong>Contrato:</strong> ${cliente.contrato}</p>
+        <hr>
+        <p><strong>Valor Total da Dívida:</strong> R$ ${cliente.total.toFixed(2)}</p>
+        <p><strong>Valor Pago:</strong> R$ ${cliente.pago.toFixed(2)}</p>
+        <p><strong>Em Aberto:</strong> R$ ${cliente.emAberto.toFixed(2)}</p>
+        <p><strong>Status:</strong> ${cliente.status}</p>
+        <p><strong>Último Pagamento:</strong> ${cliente.ultimo_pagamento}</p>
+        <p><strong>Observações:</strong> ${cliente.observacao}</p>
+    `;
+
+        document.getElementById('modalCliente').classList.remove('hidden');
+        document.getElementById('modalCliente').classList.add('flex');
+    }
+</script>
+</body>
+
 </html>
