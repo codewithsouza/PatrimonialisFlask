@@ -39,7 +39,7 @@ Este é um sistema web completo desenvolvido com *Flask* e *MySQL, focado no ger
 ![Detalhes do Cliente](imagens/detalhes_clientes.jfif)
 
 ###  💰 Monitoramento de Dívida Ativa
-![Divida Ativa](imagens/Divida%20ativa.jpeg)
+![Divida Ativa](imagens/Divida_ativa.jpeg)
 
 
 ## 🛠️ Tecnologias Utilizadas
