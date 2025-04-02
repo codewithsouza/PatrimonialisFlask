@@ -122,30 +122,36 @@
                             {% else %}
                             <span class="text-red-500 font-semibold">{{ cliente.contrato }}</span>
                             {% endif %}
-                        </td>
                         <td class="px-4 py-3 space-x-1 whitespace-nowrap">
                             <button title="Visualizar"
                                 class="bg-cyan-400 hover:bg-cyan-500 text-white font-bold py-2 px-2 rounded shadow"
-                                onclick="event.stopPropagation(); abrirModal({{ cliente.id }}, {{ cliente.nome|tojson }}, {{ ('%.2f'|format(cliente.divida or 0))|tojson }}, {{ ('%.2f'|format(valor_pago))|tojson }})">
+                                onclick="event.stopPropagation(); abrirModal(
+                                        {{ cliente.id }},
+                                        {{ cliente.nome|tojson }},
+                                        {{ '%.2f'|format(cliente.divida or 0)|tojson }},
+                                        {{ '%.2f'|format(valor_pago)|tojson }}
+                                    )">
                                 <i class="fas fa-eye"></i>
                             </button>
+
                             <button title="Simular Pagamento"
                                 class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-2 px-2 rounded shadow"
                                 onclick="abrirSimulacao({{ cliente.id }})">
                                 <i class="fas fa-coins"></i>
                             </button>
+
                             <button title="Excluir"
-                                class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-2 rounded shadow">
+                                class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-2 rounded shadow"
+                                onclick="excluirCliente({{ cliente.id }})">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
-                    </tr>
-                    {% endfor %}
+
+                        {% endfor %}
                 </tbody>
                 </tbody>
             </table>
         </div>
-        <!-- Modal Detalhes do Cliente (Visualizar) -->
         <div id="modalCliente" class="hidden fixed inset-0 bg-black bg-opacity-50 justify-center items-center z-50">
             <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
                 <div class="flex justify-between items-center mb-4">
@@ -155,11 +161,9 @@
                     </button>
                 </div>
                 <div id="clienteDetalhes" class="space-y-2 text-gray-800 text-sm">
-                    <!-- Detalhes preenchidos via JS -->
                 </div>
             </div>
         </div>
-        <!-- Modal Simulação de Pagamento -->
         <div id="modalSimulacao" class="hidden fixed inset-0 bg-black bg-opacity-50 justify-center items-center z-50">
             <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
                 <div class="flex justify-between items-center mb-4">
@@ -246,22 +250,22 @@
         }
     });
     function abrirModal(id, nome, total, pago) {
-    const row = document.querySelector(`tr[data-id='${id}']`);
+        const row = document.querySelector(`tr[data-id='${id}']`);
 
-    const cliente = {
-        nome: nome,
-        cnpj: row.querySelector('td:nth-child(3)').innerText,
-        regime: row.querySelector('td:nth-child(4)').innerText,
-        contrato: row.querySelector('td:nth-child(5)').innerText,
-        total: parseFloat(total),
-        pago: parseFloat(pago),
-        emAberto: parseFloat(total) - parseFloat(pago),
-        status: 'Ativa',
-        ultimo_pagamento: '-',
-        observacao: 'Nenhuma'
-    };
+        const cliente = {
+            nome: nome,
+            cnpj: row.querySelector('td:nth-child(3)').innerText,
+            regime: row.querySelector('td:nth-child(4)').innerText,
+            contrato: row.querySelector('td:nth-child(5)').innerText,
+            total: parseFloat(total),
+            pago: parseFloat(pago),
+            emAberto: parseFloat(total) - parseFloat(pago),
+            status: 'Ativa',
+            ultimo_pagamento: '-',
+            observacao: 'Nenhuma'
+        };
 
-    document.getElementById('clienteDetalhes').innerHTML = `
+        document.getElementById('clienteDetalhes').innerHTML = `
         <p><strong>ID:</strong> ${id}</p>
         <p><strong>Nome:</strong> ${cliente.nome}</p>
         <p><strong>CNPJ:</strong> ${cliente.cnpj}</p>
@@ -276,15 +280,17 @@
         <p><strong>Observações:</strong> ${cliente.observacao}</p>
     `;
 
-    document.getElementById('modalCliente').classList.remove('hidden');
-    document.getElementById('modalCliente').classList.add('flex');
-}
+        document.getElementById('modalCliente').classList.remove('hidden');
+        document.getElementById('modalCliente').classList.add('flex');
+    }
 
 
     function abrirSimulacao(id) {
         const row = document.querySelector(`tr[data-id='${id}']`);
         const nome = row.dataset.nome;
-        const emAberto = parseFloat(row.dataset.emAberto);
+        const dividaTotal = parseFloat(row.dataset.dividaTotal.replace('R$', '').replace(',', '.')) || 0;
+        const valorPago = parseFloat(row.dataset.pago.replace('R$', '').replace(',', '.')) || 0;
+        const emAberto = dividaTotal - valorPago;
 
         document.getElementById('simulacaoNome').textContent = nome;
         document.getElementById('simulacaoAberto').textContent = emAberto.toFixed(2);

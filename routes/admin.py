@@ -259,3 +259,10 @@ def registrar_pagamento():
     db.session.commit()
 
     return jsonify({"mensagem": "Pagamento registrado com sucesso!"})
+
+
+
+@bp_admin.route('/negociacoes')
+@login_required
+def negociacoes():
+    return render_template('admin/negociacoes.html')

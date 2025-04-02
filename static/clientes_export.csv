@@ -1,3 +1,7 @@
 ID,Nome,CNPJ,Regime,Dívida,Contrato,Segmento
-26,agromarket comercio e serviço,09442279000138,simples,10000.0,Ativo,Prestação de Serviços
+26,agromarket comercio e serviço,09442279000138,simples,1000.0,Ativo,Prestação de Serviços
 27,comercial aeronautas,25437963000188,lucro presumido,0.0,Ativo,Comércio
+34,teste novamente,123456874510110,lucro real,8000.0,Ativo,3º Setor
+38,empresa 14,5123611233125,Lucro real,900.0,Ativo,Transporte
+39,teste numero 19,5369913128712125,simples,9062.0,Ativo,Indústria
+40,teste numero 20,999594312255,simples,9500.0,Ativo,Indústria
