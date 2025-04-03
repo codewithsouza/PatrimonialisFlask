@@ -352,44 +352,64 @@
     });
 
     // Submissão do formulário de adicionar cliente
-    document.getElementById("formAdicionar").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      let formData = new FormData(this);
-      let clienteData = {
-        nome: formData.get("nome"),
-        cnpj: formData.get("cnpj"),
-        regime: formData.get("regime"),
-        divida: parseFloat(formData.get("divida")),
-        contrato: formData.get("contrato"),
-        segmento: formData.get("segmento"),
-        logradouro: formData.get("logradouro"),
-        numero: formData.get("numero"),
-        bairro: formData.get("bairro"),
-        municipio: formData.get("municipio"),
-        email: formData.get("email"),
-        telefone: formData.get("telefone"),
-        cep: formData.get("cep"),
-        monitoramento: formData.get("monitoramento") ? true : false,
-        data_monitoramento: formData.get("data_monitoramento"),
-        situacao_fiscal: formData.get("situacao_fiscal"),
-        observacoes: formData.get("observacoes")
-      };
+    
+// JS responsável pelo envio do formulário de adicionar cliente com tratamento de valores undefined + melhorias
 
-      let response = await fetch("/admin/adicionar_cliente", {
-        method: "POST",
-        body: JSON.stringify(clienteData),
-        headers: { "Content-Type": "application/json" }
-      });
+document.getElementById("formAdicionar").addEventListener("submit", async function (e) {
+  e.preventDefault();
 
-      let result = await response.json();
-      alert(result.message);
-      carregarClientes();
-      filterRows();
-      let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalAdicionar"));
-      modal.hide();
-      this.reset();
-      divDataMonitoramento.style.display = "none";
-    });
+  let formData = new FormData(this);
+  let clienteData = {
+    nome: formData.get("nome") || "",
+    cnpj: formData.get("cnpj") || "",
+    regime: formData.get("regime") || "",
+    divida: parseFloat((formData.get("divida") || "0").replace(",", ".")),
+    contrato: formData.get("contrato") || "",
+    segmento: formData.get("segmento") || "",
+    logradouro: formData.get("logradouro") || "",
+    numero: formData.get("numero") || "",
+    bairro: formData.get("bairro") || "",
+    municipio: formData.get("municipio") || "",
+    email: formData.get("email") || "",
+    telefone: formData.get("telefone") || "",
+    cep: formData.get("cep") || "",
+    monitoramento: formData.get("monitoramento") ? true : false,
+    data_monitoramento: formData.get("data_monitoramento") || "",
+    situacao_fiscal: formData.get("situacao_fiscal") || "",
+    observacoes: formData.get("observacoes") || ""
+  };
+
+  // Validação mínima obrigatória
+  if (!clienteData.nome || !clienteData.cnpj) {
+    alert("Nome e CNPJ são obrigatórios.");
+    return;
+  }
+
+  let response = await fetch("/admin/adicionar_cliente", {
+    method: "POST",
+    body: JSON.stringify(clienteData),
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+
+  let result = await response.json();
+
+  if (!response.ok) {
+    alert("Erro ao cadastrar: " + result.message);
+    return;
+  }
+
+  alert(result.message);
+
+  this.reset();
+
+  // Oculta o modal após sucesso (se usar Bootstrap)
+  const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalAdicionar"));
+  modal.hide();
+
+  // Opcional: recarregar clientes ou atualizar tabela
+});
 
     // Submissão do formulário de editar cliente
     document.getElementById("formEditar").addEventListener("submit", async function (e) {

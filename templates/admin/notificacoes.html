@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notificações por Data</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f0f2f5;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-top: 30px;
+            min-height: 550px;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .day {
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            background-color: #ffffff;
+            border-radius: 6px;
+            min-height: 100px;
+            position: relative;
+            transition: 0.2s;
+        }
+
+        .day:hover {
+            background-color: #f1f1f1;
+            cursor: pointer;
+        }
+
+        .event {
+            color: white;
+            padding: 3px 6px;
+            margin-top: 5px;
+            border-radius: 4px;
+            font-size: 12px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .event[data-tipo="Lembrete"] {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .event[data-tipo="Reunião"] {
+            background-color: #0d6efd;
+            color: #ffffff;
+        }
+
+        .event[data-tipo="Alerta"] {
+            background-color: #dc3545;
+            color: #ffffff;
+        }
+
+
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .page-header h2 {
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 5px;
+            margin-left: 35px;
+        }
+
+        .page-header .descricao-mes {
+            font-size: 1.2rem;
+            color: #555;
+            align-self: flex-start;
+            margin-left: 35px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+        }
+
+        .footer-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            position: sticky;
+            bottom: 20px;
+        }
+
+        .footer-controls .btn {
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            transform: scale(0.9);
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
+        }
+
+        @media (max-width: 768px) {
+            .header-controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .calendar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header-controls">
+        <a href="{{ url_for('admin.index') }}" class="btn btn-outline-secondary">
+            <img src="/static/logo.png" alt="Logo" class="logo">
+        </a>
+        <div class="page-header">
+            <h2>Notificações por Data</h2>
+            <div id="descricaoMes" class="descricao-mes">Exibindo notificações de <strong id="tituloMes"></strong></div>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <input id="selectMonth" type="month" class="form-control" style="max-width: 150px;">
+            <button id="abrirModal" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i></button>
+        </div>
+    </div>
+
+    <div id="calendario" class="calendar"></div>
+
+    <div class="footer-controls">
+        <button id="prevMonth" class="btn btn-secondary"><i class="fas fa-arrow-left"></i></button>
+        <button id="nextMonth" class="btn btn-secondary"><i class="fas fa-arrow-right"></i></button>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="modalNotificacao" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nova Notificação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <input id="dataInput" type="date" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <select id="tipoInput" class="form-select">
+                                <option value="">Selecione</option>
+                                <option value="Lembrete">Lembrete</option>
+                                <option value="Alerta">Alerta</option>
+                                <option value="Reunião">Reunião</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input id="mensagemInput" type="text" class="form-control" placeholder="Descrição do aviso">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="adicionarBtn" class="btn btn-primary">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const calendario = document.getElementById("calendario");
+        const eventos = {};
+        let currentDate = new Date();
+
+        const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+        function atualizarTituloMes(date) {
+            const mesAtual = meses[date.getMonth()];
+            const anoAtual = date.getFullYear();
+            document.getElementById("tituloMes").innerText = `${mesAtual} de ${anoAtual}`;
+        }
+
+        function renderCalendar(date) {
+            calendario.innerHTML = "";
+            const ano = date.getFullYear();
+            const mes = date.getMonth();
+            const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+
+            for (let dia = 1; dia <= diasNoMes; dia++) {
+                const div = document.createElement("div");
+                div.className = "day";
+                div.dataset.dia = dia;
+                div.innerHTML = `<strong>${dia}</strong>`;
+
+                const key = `${ano}-${(mes + 1).toString().padStart(2, '0')}`;
+                if (eventos[key] && eventos[key][dia]) {
+                    eventos[key][dia].forEach(msg => {
+                        const tag = document.createElement("div");
+                        tag.className = "event";
+                        const tipo = msg.match(/^\[(.*?)\]/)?.[1];
+                        tag.dataset.tipo = tipo;
+                        tag.innerText = msg;
+                        div.appendChild(tag);
+                    });
+                }
+
+                calendario.appendChild(div);
+            }
+
+            document.getElementById("selectMonth").value = `${ano}-${(mes + 1).toString().padStart(2, '0')}`;
+            atualizarTituloMes(date);
+        }
+
+        document.getElementById("abrirModal").addEventListener("click", () => {
+            const modal = new bootstrap.Modal(document.getElementById("modalNotificacao"));
+            modal.show();
+        });
+
+        document.getElementById("adicionarBtn").addEventListener("click", () => {
+            const data = document.getElementById("dataInput").value;
+            const tipo = document.getElementById("tipoInput").value;
+            const mensagem = document.getElementById("mensagemInput").value;
+
+            if (!data || !tipo || !mensagem) {
+                alert("Preencha todos os campos");
+                return;
+            }
+
+            const d = new Date(data);
+            const ano = d.getFullYear();
+            const mes = (d.getMonth() + 1).toString().padStart(2, '0');
+            const dia = d.getDate();
+            const key = `${ano}-${mes}`;
+            const fullMessage = `[${tipo}] ${mensagem}`;
+
+            if (!eventos[key]) eventos[key] = {};
+            if (!eventos[key][dia]) eventos[key][dia] = [];
+            eventos[key][dia].push(fullMessage);
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById("modalNotificacao"));
+            modal.hide();
+            renderCalendar(currentDate);
+
+            document.getElementById("dataInput").value = "";
+            document.getElementById("tipoInput").value = "";
+            document.getElementById("mensagemInput").value = "";
+        });
+
+        document.getElementById("prevMonth").addEventListener("click", () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar(currentDate);
+        });
+
+        document.getElementById("nextMonth").addEventListener("click", () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar(currentDate);
+        });
+
+        document.getElementById("selectMonth").addEventListener("change", (e) => {
+            const [ano, mes] = e.target.value.split("-");
+            currentDate.setFullYear(parseInt(ano));
+            currentDate.setMonth(parseInt(mes) - 1);
+            renderCalendar(currentDate);
+        });
+
+        renderCalendar(currentDate);
+    
+        document.addEventListener("DOMContentLoaded", function () {
+  const mesAtual = new Date().toISOString().slice(0, 7);
+  carregarNotificacoes(mesAtual);
+
+  async function carregarNotificacoes(mes) {
+    try {
+      const resposta = await fetch("/notificacoes/listar");
+      const eventos = await resposta.json();
+      if (eventos[mes]) {
+        Object.entries(eventos[mes]).forEach(([dia, itens]) => {
+          const celula = document.querySelector(`[data-dia='${dia}']`);
+          if (celula) {
+            itens.forEach(msg => {
+              const tipo = msg.match(/\\[(.*?)\\]/)?.[1];
+              const span = document.createElement("span");
+              span.classList.add("event", "badge", "d-block", "mt-1");
+
+              if (tipo === "Alerta") {
+                span.classList.add("bg-danger");
+              } else if (tipo === "Reunião") {
+                span.classList.add("bg-primary");
+              } else {
+                span.classList.add("bg-warning", "text-dark");
+              }
+
+              span.textContent = msg.replace(/\\[.*?\\]\\s?/, "");
+              celula.appendChild(span);
+            });
+          }
+        });
+      }
+    } catch (err) {
+      console.error("Erro ao carregar notificações:", err);
+    }
+  }
+
+  // Envio do formulário
+  document.getElementById("formNotificacao").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const data = document.getElementById("dataNotificacao").value;
+    const tipo = document.getElementById("tipoNotificacao").value;
+    const mensagem = document.getElementById("mensagemNotificacao").value;
+
+    const payload = { data, tipo, mensagem };
+
+    const response = await fetch("/notificacoes/adicionar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const resultado = await response.json();
+    if (response.ok) {
+      alert("Notificação salva com sucesso!");
+      location.reload();  // Recarrega a página para atualizar os eventos
+    } else {
+      alert("Erro: " + (resultado.erro || "Não foi possível salvar."));
+    }
+  });
+});
+    </script>
+</body>
+
+</html>

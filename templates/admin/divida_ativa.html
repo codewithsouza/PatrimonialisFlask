@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="pt-br">
 
 <head>
@@ -31,22 +30,24 @@
                 <img src="{{ url_for('static', filename='imagens/patrimonialis_logo.jpeg') }}" alt="Logo"
                     class="h-12 rounded-full shadow-md">
             </a>
-            <h1 class="text-4xl font-extrabold text-blue-800 text-center flex items-center justify-center gap-3 w-full">
-                <i class="fas fa-money-check-alt"></i> Monitoramento de Dívidas
-            </h1>
+            <div class="flex-1 text-center">
+                <h1 class="text-4xl font-extrabold text-blue-800 flex items-center justify-center gap-3">
+                    <i class="fas fa-money-check-alt"></i> Monitoramento de Dívidas
+                </h1>
+                <p class="text-sm text-gray-600 mt-2 flex items-center justify-center gap-2">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Última atualização: {{ data_atualizacao }}</span>
+                </p>
+            </div>
+            <a href="{{ url_for('admin.adicionar_cliente') }}"
+                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow flex items-center gap-2">
+                <i class="fas fa-plus"></i> Novo Cliente
+            </a>
         </div>
-
-        <!-- Última atualização -->
-        <div class="text-sm text-gray-600 mb-4 flex items-center gap-2">
-            <i class="fas fa-calendar-alt"></i>
-            <span>📅 Última atualização: {{ data_atualizacao }}</span>
+        <div id="clienteSelecionadoBanner" class="hidden mb-2">
+            <p id="nomeClienteSelecionado" class="text-3xl font-bold text-blue-800"></p>
         </div>
-
-        <!-- Cliente selecionado -->
-        <div id="clienteSelecionadoBanner" class="hidden mb-4">
-            <h2 class="text-2xl font-bold text-blue-700">👤 <span id="nomeClienteSelecionado"></span></h2>
-        </div>
-
+        
         <!-- Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6" id="cardsResumo">
             {% set cards = [
@@ -80,15 +81,30 @@
         <!-- Ações -->
         <div class="flex flex-col sm:flex-row gap-2 mb-4 items-stretch sm:items-center">
             <button onclick="exportarTabela()"
-                class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 flex items-center gap-2">
-                <i class="fas fa-file-excel"></i> Exportar para Excel
+                class="bg-blue-600 text-white px-3 py-1.5 rounded shadow hover:bg-blue-700 text-sm flex items-center gap-2">
+                <i class="fas fa-file-excel"></i> Exportar
             </button>
+
+
             <div class="relative w-full">
                 <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                 <input type="text" id="search" oninput="filtrarClientes()"
-                    placeholder="Pesquisar cliente por nome ou ID..."
+                    placeholder="Pesquisar por nome, ID ou CNPJ..."
                     class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
+
+            <select class="p-2 border rounded-lg shadow-sm text-sm">
+                <option value="">Contrato</option>
+                <option value="Ativo">Ativo</option>
+                <option value="Inativo">Inativo</option>
+            </select>
+
+            <select class="p-2 border rounded-lg shadow-sm text-sm">
+                <option value="">Regime</option>
+                <option value="Simples">Simples</option>
+                <option value="Lucro Real">Lucro Real</option>
+                <option value="Lucro Presumido">Lucro Presumido</option>
+            </select>
         </div>
         <!-- Tabela -->
         <div class="bg-white shadow-md rounded-2xl overflow-x-auto mb-6">
@@ -192,20 +208,133 @@
                 </div>
             </div>
         </div>
+        <!-- Paginação -->
+        <div class="flex justify-between items-center mt-4 px-2 text-sm">
+            <div>
+                <span id="paginacaoInfo" class="text-gray-600"></span>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="mudarPagina(-1)"
+                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-1 px-2 rounded">&laquo;</button>
+                <button onclick="mudarPagina(1)"
+                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-1 px-2 rounded">&raquo;</button>
+            </div>
+        </div>
 
 </body>
-<!-- Scripts -->
+
 <script>
     let clienteSelecionado = false;
+    let paginaAtual = 1;
+    const linhasPorPagina = 7;
+
     function filtrarClientes() {
         const termo = document.getElementById('search').value.toLowerCase();
-        document.querySelectorAll('.cliente-row').forEach(row => {
+        const linhas = document.querySelectorAll('.cliente-row');
+
+        linhas.forEach(row => {
             const nome = row.dataset.nome.toLowerCase();
-            const id = row.dataset.id.toString(); // converte ID para string
-            const corresponde = nome.includes(termo) || id.includes(termo);
-            row.style.display = corresponde ? '' : 'none';
+            const id = row.dataset.id.toString();
+            const cnpj = row.cells[2].innerText.toLowerCase();
+            const corresponde = nome.includes(termo) || id.includes(termo) || cnpj.includes(termo);
+            row.dataset.visivel = corresponde ? 'true' : 'false';
         });
+
+        paginaAtual = 1;
+        exibirPagina(paginaAtual);
     }
+
+    function exibirPagina(pagina) {
+        const linhas = Array.from(document.querySelectorAll('.cliente-row'));
+        const visiveis = linhas.filter(row => row.dataset.visivel !== 'false');
+
+        const total = visiveis.length;
+        const totalPaginas = Math.max(Math.ceil(total / linhasPorPagina), 1);
+        if (pagina > totalPaginas) pagina = totalPaginas;
+
+        linhas.forEach(row => row.style.display = 'none');
+        visiveis.forEach((row, index) => {
+            const inicio = (pagina - 1) * linhasPorPagina;
+            const fim = inicio + linhasPorPagina;
+            if (index >= inicio && index < fim) {
+                row.style.display = '';
+            }
+        });
+
+        document.getElementById('paginacaoInfo').textContent = `Página ${pagina} de ${totalPaginas}`;
+        paginaAtual = pagina;
+    }
+
+    function mudarPagina(direcao) {
+        exibirPagina(paginaAtual + direcao);
+    }
+
+
+    function abrirModal(id, nome, total, pago) {
+        const row = document.querySelector(`tr[data-id='${id}']`);
+
+        const cliente = {
+            nome: nome,
+            cnpj: row.querySelector('td:nth-child(3)').innerText,
+            regime: row.querySelector('td:nth-child(4)').innerText,
+            contrato: row.querySelector('td:nth-child(5)').innerText,
+            total: parseFloat(total),
+            pago: parseFloat(pago),
+            emAberto: parseFloat(total) - parseFloat(pago),
+            status: 'Ativa',
+            ultimo_pagamento: '-',
+            observacao: 'Nenhuma'
+        };
+
+        document.getElementById('clienteDetalhes').innerHTML = `
+        <p><strong>ID:</strong> ${id}</p>
+        <p><strong>Nome:</strong> ${cliente.nome}</p>
+        <p><strong>CNPJ:</strong> ${cliente.cnpj}</p>
+        <p><strong>Regime:</strong> ${cliente.regime}</p>
+        <p><strong>Contrato:</strong> ${cliente.contrato}</p>
+        <hr>
+        <p><strong>Valor Total da Dívida:</strong> R$ ${cliente.total.toFixed(2)}</p>
+        <p><strong>Valor Pago:</strong> R$ ${cliente.pago.toFixed(2)}</p>
+        <p><strong>Em Aberto:</strong> R$ ${cliente.emAberto.toFixed(2)}</p>
+        <p><strong>Status:</strong> ${cliente.status}</p>
+        <p><strong>Último Pagamento:</strong> ${cliente.ultimo_pagamento}</p>
+        <p><strong>Observações:</strong> ${cliente.observacao}</p>
+    `;
+
+        document.getElementById('modalCliente').classList.remove('hidden');
+        document.getElementById('modalCliente').classList.add('flex');
+    }
+
+    function abrirSimulacao(id) {
+        const row = document.querySelector(`tr[data-id='${id}']`);
+        const nome = row.dataset.nome;
+        const dividaTotal = parseFloat(row.dataset.dividaTotal.replace('R$', '').replace(',', '.')) || 0;
+        const valorPago = parseFloat(row.dataset.pago.replace('R$', '').replace(',', '.')) || 0;
+        const emAberto = dividaTotal - valorPago;
+
+        document.getElementById('simulacaoNome').textContent = nome;
+        document.getElementById('simulacaoAberto').textContent = emAberto.toFixed(2);
+        document.getElementById('valorPagamento').value = '';
+        document.getElementById('valorRestante').textContent = 'R$ 0,00';
+        document.getElementById('modalSimulacao').classList.remove('hidden');
+        document.getElementById('modalSimulacao').classList.add('flex');
+    }
+
+    function calcularSimulacao() {
+        const valorPago = parseFloat(document.getElementById('valorPagamento').value || 0);
+        const emAberto = parseFloat(document.getElementById('simulacaoAberto').textContent);
+        const restante = Math.max(emAberto - valorPago, 0);
+        document.getElementById('valorRestante').textContent = `R$ ${restante.toFixed(2)}`;
+    }
+
+    function fecharModal() {
+        document.getElementById('modalCliente').classList.add('hidden');
+    }
+
+    function fecharSimulacao() {
+        document.getElementById('modalSimulacao').classList.add('hidden');
+    }
+
     function filtrarPorCliente(row) {
         const dividaTotal = row.dataset.dividaTotal;
         const pago = row.dataset.pago;
@@ -249,105 +378,15 @@
             resetarTotais();
         }
     });
-    function abrirModal(id, nome, total, pago) {
-        const row = document.querySelector(`tr[data-id='${id}']`);
 
-        const cliente = {
-            nome: nome,
-            cnpj: row.querySelector('td:nth-child(3)').innerText,
-            regime: row.querySelector('td:nth-child(4)').innerText,
-            contrato: row.querySelector('td:nth-child(5)').innerText,
-            total: parseFloat(total),
-            pago: parseFloat(pago),
-            emAberto: parseFloat(total) - parseFloat(pago),
-            status: 'Ativa',
-            ultimo_pagamento: '-',
-            observacao: 'Nenhuma'
-        };
+    document.addEventListener('DOMContentLoaded', () => {
+        const linhas = document.querySelectorAll('.cliente-row');
+        linhas.forEach(row => row.dataset.visivel = 'true');
+        exibirPagina(paginaAtual);
+    });
 
-        document.getElementById('clienteDetalhes').innerHTML = `
-        <p><strong>ID:</strong> ${id}</p>
-        <p><strong>Nome:</strong> ${cliente.nome}</p>
-        <p><strong>CNPJ:</strong> ${cliente.cnpj}</p>
-        <p><strong>Regime:</strong> ${cliente.regime}</p>
-        <p><strong>Contrato:</strong> ${cliente.contrato}</p>
-        <hr>
-        <p><strong>Valor Total da Dívida:</strong> R$ ${cliente.total.toFixed(2)}</p>
-        <p><strong>Valor Pago:</strong> R$ ${cliente.pago.toFixed(2)}</p>
-        <p><strong>Em Aberto:</strong> R$ ${cliente.emAberto.toFixed(2)}</p>
-        <p><strong>Status:</strong> ${cliente.status}</p>
-        <p><strong>Último Pagamento:</strong> ${cliente.ultimo_pagamento}</p>
-        <p><strong>Observações:</strong> ${cliente.observacao}</p>
-    `;
-
-        document.getElementById('modalCliente').classList.remove('hidden');
-        document.getElementById('modalCliente').classList.add('flex');
-    }
-
-
-    function abrirSimulacao(id) {
-        const row = document.querySelector(`tr[data-id='${id}']`);
-        const nome = row.dataset.nome;
-        const dividaTotal = parseFloat(row.dataset.dividaTotal.replace('R$', '').replace(',', '.')) || 0;
-        const valorPago = parseFloat(row.dataset.pago.replace('R$', '').replace(',', '.')) || 0;
-        const emAberto = dividaTotal - valorPago;
-
-        document.getElementById('simulacaoNome').textContent = nome;
-        document.getElementById('simulacaoAberto').textContent = emAberto.toFixed(2);
-        document.getElementById('valorPagamento').value = '';
-        document.getElementById('valorRestante').textContent = 'R$ 0,00';
-        document.getElementById('modalSimulacao').classList.remove('hidden');
-        document.getElementById('modalSimulacao').classList.add('flex');
-    }
-
-    function calcularSimulacao() {
-        const valorPago = parseFloat(document.getElementById('valorPagamento').value || 0);
-        const emAberto = parseFloat(document.getElementById('simulacaoAberto').textContent);
-        const restante = Math.max(emAberto - valorPago, 0);
-        document.getElementById('valorRestante').textContent = `R$ ${restante.toFixed(2)}`;
-    }
-
-    function fecharModal() {
-        document.getElementById('modalCliente').classList.add('hidden');
-    }
-
-    function fecharSimulacao() {
-        document.getElementById('modalSimulacao').classList.add('hidden');
-    }
-    function abrirModal(id, nome, total, pago) {
-        const row = document.querySelector(`tr[data-id='${id}']`);
-
-        const cliente = {
-            nome: nome,
-            cnpj: row.querySelector('td:nth-child(3)').innerText,
-            regime: row.querySelector('td:nth-child(4)').innerText,
-            contrato: row.querySelector('td:nth-child(5)').innerText,
-            total: parseFloat(total),
-            pago: parseFloat(pago),
-            emAberto: parseFloat(total) - parseFloat(pago),
-            status: 'Ativa',
-            ultimo_pagamento: '-',
-            observacao: 'Nenhuma'
-        };
-        document.getElementById('clienteDetalhes').innerHTML = `
-        <p><strong>ID:</strong> ${id}</p>
-        <p><strong>Nome:</strong> ${cliente.nome}</p>
-        <p><strong>CNPJ:</strong> ${cliente.cnpj}</p>
-        <p><strong>Regime:</strong> ${cliente.regime}</p>
-        <p><strong>Contrato:</strong> ${cliente.contrato}</p>
-        <hr>
-        <p><strong>Valor Total da Dívida:</strong> R$ ${cliente.total.toFixed(2)}</p>
-        <p><strong>Valor Pago:</strong> R$ ${cliente.pago.toFixed(2)}</p>
-        <p><strong>Em Aberto:</strong> R$ ${cliente.emAberto.toFixed(2)}</p>
-        <p><strong>Status:</strong> ${cliente.status}</p>
-        <p><strong>Último Pagamento:</strong> ${cliente.ultimo_pagamento}</p>
-        <p><strong>Observações:</strong> ${cliente.observacao}</p>
-    `;
-
-        document.getElementById('modalCliente').classList.remove('hidden');
-        document.getElementById('modalCliente').classList.add('flex');
-    }
 </script>
+
 </body>
 
 </html>
