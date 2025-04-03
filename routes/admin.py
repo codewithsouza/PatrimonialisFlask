@@ -37,7 +37,30 @@ def clientes_cadastrados():
 @bp_admin.route('/divida_ativa')
 @login_required
 def divida_ativa():
-    return render_template('admin/divida_ativa.html')
+    # Apenas clientes com monitoramento ativo
+    clientes = Cliente.query.filter_by(usuario_id=current_user.id, monitoramento=True).all()
+
+    # Dívidas associadas ao usuário logado
+    dividas = Divida.query.filter_by(usuario_id=current_user.id).all()
+
+    total_dividas = sum(c.divida or 0 for c in clientes)
+    total_pago = sum(d.valor_pago or 0 for d in dividas)
+    total_baixadas = sum(
+        d.valor_pago for d in dividas if d.cliente.divida is not None and d.valor_pago == d.cliente.divida
+    )
+
+    data_atualizacao = datetime.now().strftime('%d/%m/%Y %H:%M')
+
+    return render_template(
+        'admin/divida_ativa.html',
+        clientes=clientes,
+        dividas=dividas,
+        total_dividas=total_dividas,
+        total_pago=total_pago,
+        total_baixadas=total_baixadas,
+        data_atualizacao=data_atualizacao
+    )
+
 
 @bp_admin.route('/notificacoes')
 @login_required
