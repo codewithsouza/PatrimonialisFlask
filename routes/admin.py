@@ -8,6 +8,8 @@ from models.clientes_db import Cliente
 from models.divida_db import Divida
 from models.notificacao import Notificacao
 from sqlalchemy.sql import func
+from models.notificacoes_db import Notificacao
+
 
 bp_admin = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -25,8 +27,9 @@ def index():
 
     eventos_semana = Notificacao.query.filter(
         Notificacao.usuario_id == current_user.id,
-        Notificacao.data_evento.between(inicio_semana, fim_semana)
+        Notificacao.data.between(inicio_semana, fim_semana)
     ).count()
+
 
     return render_template(
         'admin/index.html',

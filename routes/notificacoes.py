@@ -1,8 +1,9 @@
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
 from models.db import db
-from models.notificacoes_db import Evento
 from datetime import datetime
+from models.notificacoes_db import Notificacao
+
 
 notificacoes_bp = Blueprint('notificacoes', __name__, url_prefix='/notificacoes')
 
