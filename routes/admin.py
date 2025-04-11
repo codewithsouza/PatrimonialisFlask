@@ -15,7 +15,9 @@ bp_admin = Blueprint('admin', __name__, url_prefix='/admin')
 @bp_admin.route('/')
 @login_required
 def index():
-    total = Cliente.query.filter_by(usuario_id=current_user.id).count()
+    total_clientes = Cliente.query.filter_by(usuario_id=current_user.id).count()
+    total_divida = db.session.query(func.sum(Cliente.divida)).filter_by(usuario_id=current_user.id).scalar() or 0
+    processos_ativos = Cliente.query.filter_by(usuario_id=current_user.id, monitoramento=True).count()
 
     hoje = date.today()
     inicio_semana = hoje - timedelta(days=hoje.weekday())
@@ -23,10 +25,16 @@ def index():
 
     eventos_semana = Notificacao.query.filter(
         Notificacao.usuario_id == current_user.id,
-        Notificacao.data.between(inicio_semana, fim_semana)
+        Notificacao.data_evento.between(inicio_semana, fim_semana)
     ).count()
 
-    return render_template('admin/index.html', total_clientes=total, eventos_semana=eventos_semana)
+    return render_template(
+        'admin/index.html',
+        total_clientes=total_clientes,
+        total_divida=total_divida,
+        processos_ativos=processos_ativos,
+        eventos_semana=eventos_semana
+    )
 
 @bp_admin.route('/clientes_cadastrados')
 @login_required
@@ -37,16 +45,13 @@ def clientes_cadastrados():
 @bp_admin.route('/divida_ativa')
 @login_required
 def divida_ativa():
-    # Apenas clientes com monitoramento ativo
     clientes = Cliente.query.filter_by(usuario_id=current_user.id, monitoramento=True).all()
-
-    # Dívidas associadas ao usuário logado
     dividas = Divida.query.filter_by(usuario_id=current_user.id).all()
 
     total_dividas = sum(c.divida or 0 for c in clientes)
     total_pago = sum(d.valor_pago or 0 for d in dividas)
     total_baixadas = sum(
-        d.valor_pago for d in dividas if d.cliente.divida is not None and d.valor_pago == d.cliente.divida
+        d.valor_pago for d in dividas if d.cliente and d.cliente.divida is not None and d.valor_pago == d.cliente.divida
     )
 
     data_atualizacao = datetime.now().strftime('%d/%m/%Y %H:%M')
@@ -60,13 +65,6 @@ def divida_ativa():
         total_baixadas=total_baixadas,
         data_atualizacao=data_atualizacao
     )
-
-
-@bp_admin.route('/notificacoes')
-@login_required
-def notificacoes():
-    eventos = []
-    return render_template('admin/notificacoes.html', eventos=eventos)
 
 @bp_admin.route('/estatisticas')
 @login_required
@@ -93,6 +91,19 @@ def financeiro():
 def contratos():
     return render_template('admin/contratos.html')
 
+# API: Gráfico dinâmico
+@bp_admin.route('/api/grafico_dividas')
+@login_required
+def grafico_dividas():
+    dados = db.session.query(
+        Cliente.regime,
+        func.sum(Cliente.divida)
+    ).filter_by(usuario_id=current_user.id).group_by(Cliente.regime).all()
+
+    return jsonify({
+        "labels": [r[0] for r in dados],
+        "valores": [float(r[1]) for r in dados]
+    })
 
 # CLIENTE - ADICIONAR
 @bp_admin.route('/adicionar_cliente', methods=['POST'])
@@ -100,6 +111,8 @@ def contratos():
 def adicionar_cliente():
     data = request.get_json()
     try:
+        monitoramento = bool(data.get('monitoramento')) and str(data.get('monitoramento')).lower() in ["true", "1", "on"]
+
         novo_cliente = Cliente(
             nome=data.get('nome') or '',
             cnpj=data.get('cnpj') or '',
@@ -114,8 +127,9 @@ def adicionar_cliente():
             email=data.get('email') or '',
             telefone=data.get('telefone') or '',
             cep=data.get('cep') or '',
-            monitoramento=str(data.get('monitoramento')).lower() in ["true", "1", "on"],
-            data_monitoramento=datetime.strptime(data.get('data_monitoramento'), "%Y-%m-%d").date() if data.get('data_monitoramento') else None,
+            monitoramento=monitoramento,
+            data_monitoramento=datetime.strptime(data.get('data_monitoramento'), "%Y-%m-%d").date()
+                if data.get('data_monitoramento') else None,
             situacao_fiscal=data.get('situacao_fiscal') or '',
             observacoes=data.get('observacoes') or '',
             usuario_id=current_user.id
@@ -132,13 +146,29 @@ def adicionar_cliente():
     try:
         db.session.add(novo_cliente)
         db.session.commit()
-        return jsonify({"message": "Cliente cadastrado com sucesso!"})
+        return jsonify({
+            "message": "Cliente cadastrado com sucesso!",
+            "id": novo_cliente.id
+        })
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Erro ao cadastrar cliente: {str(e)}"}), 500
 
+@bp_admin.route('/excluir_cliente/<int:id>', methods=['POST'])
+@login_required
+def excluir_cliente(id):
+    cliente = Cliente.query.filter_by(id=id, usuario_id=current_user.id).first()
+    if not cliente:
+        return jsonify({'message': 'Cliente não encontrado!'}), 404
 
-# IMPORTAÇÃO (AINDA NÃO IMPLEMENTADA)
+    try:
+        db.session.delete(cliente)
+        db.session.commit()
+        return jsonify({'message': 'Cliente excluído com sucesso!', 'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Erro ao excluir cliente: {str(e)}'}), 500
+
 @bp_admin.route('/importar', methods=['POST'])
 @login_required
 def importar():
@@ -149,8 +179,6 @@ def importar():
 
     flash("Importação recebida, mas ainda não implementada.", "info")
     return redirect(url_for('admin.clientes_cadastrados'))
-
-
 
 @bp_admin.route('/exportar')
 @login_required
@@ -171,7 +199,8 @@ def exportar():
     } for c in clientes])
 
     os.makedirs("static", exist_ok=True)
-    file_path = os.path.join("static", "clientes_export.csv")
+    file_name = f"clientes_export_{current_user.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.csv"
+    file_path = os.path.join("static", file_name)
     df.to_csv(file_path, index=False)
 
     flash("Clientes exportados com sucesso!", "success")

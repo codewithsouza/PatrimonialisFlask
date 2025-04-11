@@ -199,73 +199,104 @@
 </div>
 
 <!-- Modal de Editar Cliente (com os novos campos) -->
-<div class="modal fade" id="modalEditar" tabindex="-1">
-  <div class="modal-dialog modal-xl" style="max-width: 90%;">
-    <div class="modal-content">
+<div class="modal fade" id="modalEditar" tabindex="-1" aria-labelledby="modalEditarLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <form id="formEditar" class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Editar Cliente</h5>
+        <h5 class="modal-title" id="modalEditarLabel">Editar Cliente</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body">
-        <form id="formEditar">
-          <input type="hidden" name="id">
-          <!-- Campos básicos -->
-          <input type="text" name="nome" class="form-control mb-2" placeholder="Nome" required>
-          <input type="text" name="cnpj" class="form-control mb-2" placeholder="CNPJ" required>
-          <input type="text" name="regime" class="form-control mb-2" placeholder="Regime" required>
-          <input type="number" step="0.01" name="divida" class="form-control mb-2" placeholder="Dívida" required>
+      <div class="modal-body row g-3">
 
-          <!-- Exibe Situação Fiscal antes de Contrato -->
-          <label for="situacao_fiscal">Situação Fiscal</label>
-          <input type="text" name="situacao_fiscal" class="form-control mb-2" placeholder="Situação Fiscal">
+        <input type="hidden" name="id">
 
-          <label for="contrato">Contrato</label>
-          <select name="contrato" class="form-control mb-2" required>
-            <option value="Ativo">Ativo</option>
-            <option value="Encerrado">Encerrado</option>
-          </select>
+        <div class="col-md-6">
+          <label for="nome" class="form-label">Nome</label>
+          <input type="text" name="nome" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label for="cnpj" class="form-label">CNPJ</label>
+          <input type="text" name="cnpj" class="form-control" required>
+        </div>
 
-          <label for="segmento">Segmento</label>
-          <select name="segmento" class="form-control mb-2" required>
-            <option value="" disabled>Escolha um segmento</option>
-            <option value="Comércio">Comércio</option>
-            <option value="Prestação de Serviços">Prestação de Serviços</option>
-            <option value="Indústria">Indústria</option>
-            <option value="Transporte">Transporte</option>
-            <option value="Rural">Rural</option>
-            <option value="3º Setor">3º Setor</option>
-          </select>
+        <div class="col-md-6">
+          <label for="regime" class="form-label">Regime Tributário</label>
+          <input type="text" name="regime" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label for="divida" class="form-label">Dívida</label>
+          <input type="text" name="divida" class="form-control">
+        </div>
 
-          <!-- Campos extras já existentes -->
-          <hr>
-          <h6>Informações Adicionais</h6>
-          <input type="text" name="logradouro" class="form-control mb-2" placeholder="Logradouro" required>
-          <input type="text" name="numero" class="form-control mb-2" placeholder="Número" required>
-          <input type="text" name="bairro" class="form-control mb-2" placeholder="Bairro" required>
-          <input type="text" name="municipio" class="form-control mb-2" placeholder="Município" required>
-          <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
-          <input type="text" name="telefone" class="form-control mb-2" placeholder="Telefone" required>
-          <input type="text" name="cep" class="form-control mb-2" placeholder="CEP" required>
+        <div class="col-md-6">
+          <label for="contrato" class="form-label">Contrato</label>
+          <input type="text" name="contrato" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label for="segmento" class="form-label">Segmento</label>
+          <input type="text" name="segmento" class="form-control">
+        </div>
 
-          <!-- Novos campos -->
-          <hr>
-          <h6>Novas Informações</h6>
-          <div class="form-check form-switch mb-2">
+        <div class="col-md-6">
+          <label for="logradouro" class="form-label">Logradouro</label>
+          <input type="text" name="logradouro" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label for="numero" class="form-label">Número</label>
+          <input type="text" name="numero" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label for="bairro" class="form-label">Bairro</label>
+          <input type="text" name="bairro" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label for="municipio" class="form-label">Município</label>
+          <input type="text" name="municipio" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label for="email" class="form-label">E-mail</label>
+          <input type="email" name="email" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label for="telefone" class="form-label">Telefone</label>
+          <input type="text" name="telefone" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label for="cep" class="form-label">CEP</label>
+          <input type="text" name="cep" class="form-control">
+        </div>
+
+        <div class="col-md-6">
+          <label for="situacao_fiscal" class="form-label">Situação Fiscal</label>
+          <input type="text" name="situacao_fiscal" class="form-control">
+        </div>
+        <div class="col-md-12">
+          <label for="observacoes" class="form-label">Observações</label>
+          <textarea name="observacoes" class="form-control" rows="2"></textarea>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-check mt-4">
             <input class="form-check-input" type="checkbox" name="monitoramento" id="monitoramento_edit">
-            <label class="form-check-label" for="monitoramento_edit">Cliente em Monitoramento?</label>
+            <label class="form-check-label" for="monitoramento_edit">
+              Monitoramento Ativo?
+            </label>
           </div>
-          <div id="divDataMonitoramento_edit" style="display: none;">
-            <label for="data_monitoramento_edit">Data do Monitoramento</label>
-            <input type="date" name="data_monitoramento" class="form-control mb-2" id="data_monitoramento_edit">
-          </div>
-          <textarea name="observacoes" class="form-control mb-2" placeholder="Observações" rows="3"></textarea>
+        </div>
+        <div class="col-md-6" id="divDataMonitoramento_edit" style="display:none;">
+          <label for="data_monitoramento" class="form-label">Data do Monitoramento</label>
+          <input type="date" name="data_monitoramento" class="form-control">
+        </div>
 
-          <button type="submit" class="btn btn-primary w-100">Salvar Alterações</button>
-        </form>
       </div>
-    </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </form>
   </div>
 </div>
+
 
 <!-- Modal de Visualizar Cliente (apenas leitura) com informações extras -->
 <div class="modal fade" id="modalVisualizar" tabindex="-1">
@@ -552,6 +583,9 @@ document.getElementById("formAdicionar").addEventListener("submit", async functi
       }
     });
   });
+
+
+
 </script>
 
 {% endblock %}
