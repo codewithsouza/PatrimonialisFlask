@@ -1,5 +1,6 @@
 from models.db import db
 from datetime import date
+from models.notificacoes_db import Notificacao
 
 class Notificacao(db.Model):
     __tablename__ = 'notificacoes'

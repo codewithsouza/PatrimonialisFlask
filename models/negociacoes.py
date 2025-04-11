@@ -9,7 +9,7 @@ class Negociacao(db.Model):
     status = db.Column(db.String(50), default='Pendente')  # Status da negociação: 'Pendente' ou 'Finalizada'
 
     # Relacionamento com o usuário
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)  # Chave estrangeira para o usuário
+    usuario_id = db.Column(db.Integer, db.ForeignKey('cadastro.id'), nullable=False)  # Chave estrangeira para o usuário
     usuario = db.relationship('Usuario', backref=db.backref('negociacoes', lazy=True))  # Relacionamento de volta com o usuário
 
     # Adicione outros campos necessários

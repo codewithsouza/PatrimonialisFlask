@@ -4,7 +4,6 @@ from models.db import db
 from datetime import datetime
 from models.notificacoes_db import Notificacao
 
-
 notificacoes_bp = Blueprint('notificacoes', __name__, url_prefix='/notificacoes')
 
 @notificacoes_bp.route('/')
@@ -16,17 +15,16 @@ def notificacoes_index():
 @login_required
 def listar_notificacoes():
     try:
-        eventos = Evento.query.filter_by(usuario_id=current_user.id).all()
+        eventos = Notificacao.query.filter_by(usuario_id=current_user.id).all()
         resultado = {}
         for e in eventos:
-            mes = e.data_evento.strftime("%Y-%m")
-            dia = e.data_evento.day
+            mes = e.data.strftime("%Y-%m")
+            dia = e.data.day
             if mes not in resultado:
                 resultado[mes] = {}
             if dia not in resultado[mes]:
                 resultado[mes][dia] = []
-            # Formato que o JS espera: [tipo] titulo | descricao
-            resultado[mes][dia].append(f"[{e.tipo}] {e.titulo} | {e.descricao or ''}")
+            resultado[mes][dia].append(f"[{e.tipo}] {e.mensagem} | {e.descricao or ''}")
         return jsonify(resultado)
     except Exception as e:
         print("Erro em listar_notificacoes():", e)
@@ -37,11 +35,11 @@ def listar_notificacoes():
 def adicionar_notificacao():
     dados = request.get_json()
     try:
-        nova = Evento(
-            titulo=dados.get('mensagem'),  # mensagem → titulo
-            descricao=dados.get('descricao'),  # ← adicione se estiver usando
+        nova = Notificacao(
+            mensagem=dados.get('mensagem'),
+            descricao=dados.get('descricao'),
             tipo=dados.get('tipo'),
-            data_evento=datetime.strptime(dados.get('data'), "%Y-%m-%d").date(),
+            data=datetime.strptime(dados.get('data'), "%Y-%m-%d").date(),
             usuario_id=current_user.id
         )
         db.session.add(nova)

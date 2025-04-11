@@ -8,7 +8,7 @@ from models.clientes_db import Cliente
 from models.divida_db import Divida
 from models.notificacao import Notificacao
 from sqlalchemy.sql import func
-from models.notificacoes_db import Notificacao
+
 
 
 bp_admin = Blueprint('admin', __name__, url_prefix='/admin')
