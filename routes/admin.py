@@ -9,12 +9,9 @@ from models.divida_db import Divida
 from models.notificacao import Notificacao
 from sqlalchemy.sql import func
 
-
-
-
 bp_admin = Blueprint('admin', __name__, url_prefix='/admin')
 
-# ROTAS DE PÁGINAS BÁSICAS
+# --------------------- ROTAS DE DASHBOARD ---------------------
 @bp_admin.route('/')
 @login_required
 def index():
@@ -31,7 +28,6 @@ def index():
         Notificacao.data.between(inicio_semana, fim_semana)
     ).count()
 
-
     return render_template(
         'admin/index.html',
         total_clientes=total_clientes,
@@ -40,13 +36,13 @@ def index():
         eventos_semana=eventos_semana
     )
 
+# --------------------- ROTAS DE CLIENTES ---------------------
 @bp_admin.route('/clientes_cadastrados')
 @login_required
 def clientes_cadastrados():
     pagina = request.args.get("page", 1, type=int)
     por_pagina = 15
 
-    # Apenas clientes do usuário logado
     query = Cliente.query.filter_by(usuario_id=current_user.id)
     total = query.count()
 
@@ -62,7 +58,7 @@ def clientes_cadastrados():
                            page=pagina,
                            total_paginas=total_paginas)
 
-
+# --------------------- ROTAS DE DÍVIDAS ---------------------
 @bp_admin.route('/divida_ativa')
 @login_required
 def divida_ativa():
@@ -74,11 +70,7 @@ def divida_ativa():
     total_baixadas = sum(
         d.valor_pago for d in dividas if d.cliente and d.cliente.divida is not None and d.valor_pago == d.cliente.divida
     )
-    
-    
-    
-    
-    
+
     data_atualizacao = datetime.now().strftime('%d/%m/%Y %H:%M')
 
     return render_template(
@@ -91,6 +83,22 @@ def divida_ativa():
         data_atualizacao=data_atualizacao
     )
 
+@bp_admin.route('/divida_municipal')
+@login_required
+def divida_municipal():
+    return render_template('admin/divida_municipal.html')
+
+@bp_admin.route('/divida_estadual')
+@login_required
+def divida_estadual():
+    return render_template('admin/divida_estadual.html')
+
+@bp_admin.route('/divida_federal')
+@login_required
+def divida_federal():
+    return render_template('admin/divida_federal.html')
+
+# --------------------- OUTRAS PÁGINAS ---------------------
 @bp_admin.route('/estatisticas')
 @login_required
 def estatisticas():
@@ -116,7 +124,7 @@ def financeiro():
 def contratos():
     return render_template('admin/contratos.html')
 
-# API: Gráfico dinâmico
+# --------------------- API - GRÁFICO DINÂMICO ---------------------
 @bp_admin.route('/api/grafico_dividas')
 @login_required
 def grafico_dividas():
@@ -130,7 +138,7 @@ def grafico_dividas():
         "valores": [float(r[1]) for r in dados]
     })
 
-# CLIENTE - ADICIONAR
+# --------------------- AÇÕES DE CLIENTES ---------------------
 @bp_admin.route('/adicionar_cliente', methods=['POST'])
 @login_required
 def adicionar_cliente():
@@ -194,6 +202,7 @@ def excluir_cliente(id):
         db.session.rollback()
         return jsonify({'message': f'Erro ao excluir cliente: {str(e)}'}), 500
 
+# --------------------- IMPORTAÇÃO / EXPORTAÇÃO ---------------------
 @bp_admin.route('/importar', methods=['POST'])
 @login_required
 def importar():
@@ -230,3 +239,9 @@ def exportar():
 
     flash("Clientes exportados com sucesso!", "success")
     return send_file(file_path, as_attachment=True)
+
+
+@bp_admin.route('/cobranca_judicial')
+@login_required
+def cobranca_judicial():
+    return render_template('admin/cobranca_judicial.html')

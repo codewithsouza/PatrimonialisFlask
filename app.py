@@ -36,6 +36,7 @@ def create_app():
     app.register_blueprint(bp_admin)
     app.register_blueprint(notificacoes_bp)
     
+    
 
 
     # Página inicial pública
@@ -49,3 +50,6 @@ if __name__ == '__main__':
     app = create_app()
     port = int(os.getenv('FLASK_PORT', 5000))
     app.run(debug=app.config['DEBUG'], port=port)
+
+
+

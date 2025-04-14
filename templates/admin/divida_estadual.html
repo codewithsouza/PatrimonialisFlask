@@ -1,0 +1,192 @@
+{% extends "admin/base.html" %}
+{% block title %}Débitos Estaduais{% endblock %}
+
+{% block content %}
+<!-- Importação Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  .filtros {
+    flex: 1;
+    max-width: 250px;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.05);
+  }
+
+  .conteudo-principal {
+    flex: 3;
+  }
+
+  .visualizacao {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.05);
+  }
+
+  .tabela-detalhes {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.05);
+  }
+
+  .tabela-detalhes table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .tabela-detalhes th,
+  .tabela-detalhes td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+
+  .tabela-detalhes th {
+    background-color: #f0f0f0;
+    font-weight: 600;
+  }
+
+  .badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    display: inline-block;
+  }
+
+  .em-aberto { background-color: #dc3545; }
+  .quitado { background-color: #28a745; }
+  .parcelado { background-color: #ffc107; color: #000; }
+</style>
+
+<div class="container d-flex gap-4 mt-4">
+  <!-- Filtros -->
+  <div class="filtros">
+    <h5>Filtros</h5>
+    <label><input type="checkbox" checked> ICMS</label>
+    <label><input type="checkbox" checked> IPVA</label>
+    <label><input type="checkbox" checked> ITCMD</label>
+    <label><input type="checkbox" checked> Taxa de Fiscalização</label>
+    <label><input type="checkbox" checked> Taxa de Bombeiros</label>
+    <label><input type="checkbox" checked> Taxa Ambiental</label>
+    <label><input type="checkbox" checked> DARE / DAE</label>
+    <br>
+    <strong>Período</strong>
+    <input type="text" value="01/01/2022 à 31/12/2023"
+      style="width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc; margin-top: 5px;">
+    <br><br>
+    <strong>Estado</strong>
+    <select style="width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc;">
+      <option>Todos</option>
+      <option>MG</option>
+      <option>SP</option>
+      <option>RJ</option>
+      <option>BA</option>
+    </select>
+  </div>
+
+  <!-- Conteúdo Principal -->
+  <div class="conteudo-principal w-100">
+    <div class="visualizacao mb-4">
+      <h5 class="mb-3">Empresa: SuperConsultoria LTDA</h5>
+      <p><strong>Valor Total da Dívida Estadual:</strong> R$ 13.880,00</p>
+      <div class="row">
+        <div class="col-md-6">
+          <canvas id="grafico_composicao_estadual"></canvas>
+        </div>
+        <div class="col-md-6">
+          <canvas id="grafico_pagamentos_estadual"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabela de Detalhes -->
+    <div class="tabela-detalhes mb-4">
+      <h4>Lista de Débitos Estaduais</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Tributo</th>
+            <th>Estado</th>
+            <th>Situação</th>
+            <th>PA</th>
+            <th>Ano</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>ICMS</td><td>MG</td><td><span class="badge em-aberto">Em Aberto</span></td><td>1º PA</td><td>2023</td><td>R$ 4.200,00</td></tr>
+          <tr><td>IPVA</td><td>SP</td><td><span class="badge quitado">Quitado</span></td><td>2º PA</td><td>2022</td><td>R$ 1.600,00</td></tr>
+          <tr><td>ITCMD</td><td>RJ</td><td><span class="badge parcelado">Parcelado</span></td><td>1º PA</td><td>2023</td><td>R$ 2.300,00</td></tr>
+          <tr><td>Taxa de Fiscalização</td><td>BA</td><td><span class="badge em-aberto">Em Aberto</span></td><td>Único</td><td>2023</td><td>R$ 980,00</td></tr>
+          <tr><td>Taxa de Bombeiros</td><td>MG</td><td><span class="badge quitado">Quitado</span></td><td>Único</td><td>2021</td><td>R$ 750,00</td></tr>
+          <tr><td>Taxa Ambiental</td><td>SP</td><td><span class="badge em-aberto">Em Aberto</span></td><td>3º PA</td><td>2022</td><td>R$ 1.250,00</td></tr>
+          <tr><td>DARE / DAE</td><td>RJ</td><td><span class="badge parcelado">Parcelado</span></td><td>2º PA</td><td>2023</td><td>R$ 1.800,00</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tabela-detalhes">
+      <h4>Parcelamentos Ativos</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Tributo</th>
+            <th>Estado</th>
+            <th>Parcelas</th>
+            <th>Valor Parcela</th>
+            <th>Valor Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>ITCMD</td><td>RJ</td><td>12</td><td>R$ 191,66</td><td>R$ 2.300,00</td></tr>
+          <tr><td>DARE / DAE</td><td>RJ</td><td>6</td><td>R$ 300,00</td><td>R$ 1.800,00</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- GRÁFICOS Chart.js -->
+<script>
+  const ctx1 = document.getElementById('grafico_composicao_estadual');
+  new Chart(ctx1, {
+    type: 'doughnut',
+    data: {
+      labels: ['ICMS', 'IPVA', 'ITCMD', 'Fiscalização', 'Bombeiros', 'Ambiental', 'DAE/DARE'],
+      datasets: [{
+        label: 'Débitos Estaduais',
+        data: [4200, 1600, 2300, 980, 750, 1250, 1800],
+        backgroundColor: ['#0d6efd', '#ffc107', '#198754', '#dc3545', '#6f42c1', '#20c997', '#fd7e14']
+      }]
+    },
+    options: {
+      plugins: { legend: { position: 'bottom' } },
+      responsive: true
+    }
+  });
+
+  const ctx2 = document.getElementById('grafico_pagamentos_estadual');
+  new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: ['2021', '2022', '2023'],
+      datasets: [{
+        label: 'Pagamentos (R$)',
+        data: [1500, 3400, 5700],
+        backgroundColor: '#0d6efd'
+      }]
+    },
+    options: {
+      scales: { y: { beginAtZero: true } },
+      responsive: true
+    }
+  });
+</script>
+{% endblock %}

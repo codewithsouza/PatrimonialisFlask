@@ -29,12 +29,13 @@
   </div>
 </div>
 
-
 <div class="row g-3 mb-3">
+  <!-- Empresas Gerenciadas -->
   <div class="col-sm-12 col-md-4">
     <a href="{{ url_for('admin.clientes_cadastrados') }}" class="text-decoration-none">
-      <div class="card text-white bg-primary" style="min-height: 220px;">
+      <div class="card text-white bg-primary border-0 shadow-sm rounded-4" style="min-height: 220px; transition: transform 0.2s;">
         <div class="card-body d-flex flex-column justify-content-center align-items-center text-center">
+          <i class="fas fa-building fa-2x mb-3"></i>
           <h5 class="card-title fs-1">{{ total_clientes }}</h5>
           <p class="card-text fs-5 text-white">Empresas Gerenciadas</p>
         </div>
@@ -42,10 +43,12 @@
     </a>
   </div>
 
+  <!-- Dívida Consolidada -->
   <div class="col-sm-12 col-md-4">
     <a href="{{ url_for('admin.divida_ativa') }}" class="text-decoration-none">
-      <div class="card text-white bg-success" style="min-height: 220px;">
+      <div class="card text-white bg-success border-0 shadow-sm rounded-4" style="min-height: 220px; transition: transform 0.2s;">
         <div class="card-body d-flex flex-column justify-content-center align-items-center text-center">
+          <i class="fas fa-dollar-sign fa-2x mb-3"></i>
           <h5 class="card-title fs-1">
             R$ {{ "{:,.2f}".format(total_divida | float).replace(',', 'X').replace('.', ',').replace('X', '.') }}
           </h5>
@@ -55,15 +58,18 @@
     </a>
   </div>
 
+  <!-- Processos Judiciais -->
   <div class="col-sm-12 col-md-4">
-    <div class="card text-white bg-danger" style="min-height: 220px;">
+    <div class="card text-white bg-danger border-0 shadow-sm rounded-4" style="min-height: 220px; transition: transform 0.2s;">
       <div class="card-body d-flex flex-column justify-content-center align-items-center text-center">
+        <i class="fas fa-gavel fa-2x mb-3"></i>
         <h5 class="card-title fs-1">{{ processos_ativos }}</h5>
         <p class="card-text fs-5">Processos Judiciais Ativos</p>
       </div>
     </div>
   </div>
 </div>
+
 
 <!-- Seção de Gráficos -->
 <div class="row g-3 mb-3">

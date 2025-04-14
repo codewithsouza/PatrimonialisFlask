@@ -1,0 +1,138 @@
+{% extends "admin/base.html" %}
+{% block title %}Cobrança Judicial{% endblock %}
+
+{% block content %}
+<!-- Importação Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  .filtros {
+    flex: 1;
+    max-width: 250px;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.05);
+  }
+  .conteudo-principal {
+    flex: 3;
+  }
+  .visualizacao, .tabela-detalhes {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.05);
+  }
+  .tabela-detalhes table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .tabela-detalhes th, .tabela-detalhes td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  .tabela-detalhes th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+  }
+</style>
+
+<div class="container d-flex gap-4 mt-4">
+  <!-- Filtros -->
+  <div class="filtros">
+    <h5>Filtros</h5>
+    <label>Empresa</label>
+    <select class="form-select mb-2">
+      <option>Todos</option>
+      <option>SuperConsultoria LTDA</option>
+      <option>Contabilize Tech</option>
+    </select>
+    <label>Status</label>
+    <select class="form-select mb-2">
+      <option>Todos</option>
+      <option>Ativo</option>
+      <option>Suspenso</option>
+      <option>Encerrado</option>
+    </select>
+    <label>Vara</label>
+    <select class="form-select mb-2">
+      <option>Todos</option>
+      <option>1ª Vara Federal</option>
+      <option>2ª Vara Estadual</option>
+    </select>
+  </div>
+
+  <!-- Conteúdo Principal -->
+  <div class="conteudo-principal w-100">
+    <div class="visualizacao mb-4">
+      <h5 class="mb-3">Resumo: SuperConsultoria LTDA</h5>
+      <p><strong>Valor Total em Cobrança Judicial:</strong> R$ 245.000,00</p>
+      <p><strong>Processos Ativos:</strong> 5</p>
+      <div class="row">
+        <div class="col-md-6">
+          <canvas id="grafico_status"></canvas>
+        </div>
+        <div class="col-md-6">
+          <canvas id="grafico_responsavel"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabela-detalhes mb-4">
+      <h4>Lista de Processos</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Nº Processo</th>
+            <th>Empresa</th>
+            <th>Vara</th>
+            <th>Valor</th>
+            <th>Status</th>
+            <th>Garantia</th>
+            <th>Próximo Prazo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>0801234-56.2023.8.26.0000</td><td>SuperConsultoria LTDA</td><td>1ª Vara Federal</td><td>R$ 45.000,00</td><td>Ativo</td><td>Sim</td><td>20/04/2025</td></tr>
+          <tr><td>0822222-33.2023.8.26.0000</td><td>Contabilize Tech</td><td>2ª Vara Estadual</td><td>R$ 75.000,00</td><td>Ativo</td><td>Não</td><td>25/04/2025</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  new Chart(document.getElementById('grafico_status'), {
+    type: 'pie',
+    data: {
+      labels: ['Ativo', 'Suspenso', 'Encerrado'],
+      datasets: [{
+        data: [5, 1, 2],
+        backgroundColor: ['#0d6efd', '#ffc107', '#dc3545']
+      }]
+    },
+    options: {
+      plugins: { legend: { position: 'bottom' } },
+      responsive: true
+    }
+  });
+
+  new Chart(document.getElementById('grafico_responsavel'), {
+    type: 'bar',
+    data: {
+      labels: ['Dr. Carlos', 'Dra. Ana', 'Equipe Externa'],
+      datasets: [{
+        label: 'Qtde de Processos',
+        data: [3, 2, 1],
+        backgroundColor: '#0d6efd'
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+</script>
+{% endblock %}
