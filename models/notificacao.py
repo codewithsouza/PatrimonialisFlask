@@ -1,13 +1,12 @@
 from models.db import db
 from datetime import date
-from models.notificacoes_db import Notificacao
 
 class Notificacao(db.Model):
     __tablename__ = 'notificacoes'
     __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('cadastro.id'), nullable=False)
     data = db.Column(db.Date, nullable=False)  # Data da notificação
     tipo = db.Column(db.String(50), nullable=False)  # Lembrete, Alerta, Reunião
     mensagem = db.Column(db.String(255), nullable=False)

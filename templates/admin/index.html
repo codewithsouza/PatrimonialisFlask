@@ -5,10 +5,31 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h2 class="mb-0">Dashboard Administrativo</h2>
-  <a href="{{ url_for('notificacoes.notificacoes_index') }}" class="btn btn-outline-primary">
-    <i class="fas fa-bell me-2"></i> Notificações
-  </a>
+
+  <div class="dropdown">
+    <a href="#" class="btn btn-outline-primary position-relative dropdown-toggle" role="button"
+      data-bs-toggle="dropdown" aria-expanded="false" id="btnNotificacoes">
+      <i class="fas fa-bell me-2"></i> Notificações
+      <span id="notificacaoBadge"
+        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
+        0
+      </span>
+    </a>
+
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="btnNotificacoes" id="listaNotificacoes"
+      style="min-width: 300px;">
+      <!-- Notificações serão carregadas aqui -->
+      <li>
+        <a class="dropdown-item text-center text-primary fw-bold"
+          href="{{ url_for('notificacoes.notificacoes_index') }}">
+          Ver todas
+        </a>
+      </li>
+    </ul>
+  </div>
 </div>
+
+
 <div class="row g-3 mb-3">
   <div class="col-sm-12 col-md-4">
     <a href="{{ url_for('admin.clientes_cadastrados') }}" class="text-decoration-none">
@@ -79,15 +100,14 @@
     <div class="card h-100">
       <div class="card-body">
         <h5 class="card-title">Alertas</h5>
-        <ul class="list-group">
-          <li class="list-group-item list-group-item-warning">Certidão Negativa de Díbitos expirando em breve</li>
-          <li class="list-group-item list-group-item-danger">Prazo judicial crítico se aproximando</li>
-          <li class="list-group-item list-group-item-warning">Acordo em risco de rescisão</li>
+        <ul id="listaAlertas" class="list-group">
+          <li class="list-group-item text-muted small">Carregando...</li>
         </ul>
       </div>
     </div>
   </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -118,6 +138,128 @@
     });
   }
 
-  document.addEventListener('DOMContentLoaded', carregarGrafico);
+  // listar notificações
+  document.addEventListener("DOMContentLoaded", async () => {
+    try {
+      const res = await fetch("/notificacoes/listar");
+      const dados = await res.json();
+      const lista = document.getElementById("listaNotificacoes");
+      const badge = document.getElementById("notificacaoBadge");
+
+      let hoje = new Date();
+      let seteDias = new Date();
+      seteDias.setDate(hoje.getDate() + 7);
+
+      let contador = 0;
+
+      for (const [mes, dias] of Object.entries(dados)) {
+        for (const [dia, eventos] of Object.entries(dias)) {
+          const dataNotificacao = new Date(`${mes}-${String(dia).padStart(2, '0')}`);
+
+          if (dataNotificacao >= hoje && dataNotificacao <= seteDias) {
+            eventos.forEach(evento => {
+              const li = document.createElement("li");
+              li.innerHTML = `
+  <div class="bg-light border rounded p-2 mb-2 shadow-sm" style="max-width: 320px;">
+    <div class="d-flex justify-content-between align-items-start">
+      <div class="me-2" style="font-size: 14px;">
+        ${evento.texto}
+      </div>
+      <div class="d-flex flex-column align-items-end gap-1">
+        <button class="btn btn-sm btn-outline-primary" title="Editar" onclick="editarNotificacao(${evento.id})">
+          <i class="fas fa-pen"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-danger" title="Excluir" onclick="excluirNotificacao(${evento.id})">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+`;
+              lista.insertBefore(li, lista.lastElementChild);
+
+              contador++;
+            });
+          }
+        }
+      }
+
+      if (contador > 0) {
+        badge.classList.remove("d-none");
+        badge.textContent = contador;
+      }
+
+    } catch (e) {
+      console.error("Erro ao buscar notificações:", e);
+    }
+  });
+
+  // carregar notificações no card
+
+  async function carregarAlertasIndex() {
+  const lista = document.getElementById("listaAlertas");
+  lista.innerHTML = "";
+
+  try {
+    const res = await fetch("/notificacoes/listar");
+    const dados = await res.json();
+
+    let hoje = new Date();
+    let seteDias = new Date();
+    seteDias.setDate(hoje.getDate() + 7);
+
+    let encontrou = false;
+
+    for (const [mes, dias] of Object.entries(dados)) {
+      for (const [dia, eventos] of Object.entries(dias)) {
+        const dataNotificacao = new Date(`${mes}-${String(dia).padStart(2, '0')}`);
+        if (dataNotificacao >= hoje && dataNotificacao <= seteDias) {
+          eventos.forEach(evento => {
+            const texto = evento.texto || evento;
+
+            // Extrai [Tipo], Título e Descrição
+            const match = texto.match(/^\[(.*?)\]\s*(.*?)\s*\|\s*(.*)$/);
+            if (!match) return;
+
+            const tipo = match[1];
+            const titulo = match[2];
+            const descricao = match[3];
+
+            let classe = "list-group-item-light";
+            if (tipo === "Alerta") classe = "list-group-item-warning";
+            if (tipo === "Reunião") classe = "list-group-item-info";
+            if (tipo === "Lembrete") classe = "list-group-item-secondary";
+
+            const li = document.createElement("li");
+            li.className = `list-group-item ${classe}`;
+            li.innerHTML = `
+              <div class="d-flex justify-content-between">
+                <div>
+                  <strong>${titulo}</strong><br>
+                  <small class="text-muted">${descricao}</small>
+                </div>
+                <span class="badge bg-dark align-self-start" style="font-size: 0.75rem;">
+                  ${dataNotificacao.toLocaleDateString("pt-BR")}
+                </span>
+              </div>
+            `;
+            lista.appendChild(li);
+            encontrou = true;
+          });
+        }
+      }
+    }
+
+    if (!encontrou) {
+      lista.innerHTML = `<li class="list-group-item text-muted">Sem notificações para esta semana.</li>`;
+    }
+
+  } catch (e) {
+    console.error("Erro ao carregar alertas:", e);
+    lista.innerHTML = `<li class="list-group-item text-danger">Erro ao carregar notificações.</li>`;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", carregarAlertasIndex);
 </script>
 {% endblock %}

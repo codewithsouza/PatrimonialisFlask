@@ -5,10 +5,13 @@ from models.db import db
 from models.usuario import Usuario
 from config import Config
 
+
 # Importando os blueprints
 from routes.admin import bp_admin
 from routes.auth import auth
 from routes.notificacoes import notificacoes_bp
+
+
 
 def create_app():
     app = Flask(__name__)
@@ -32,6 +35,8 @@ def create_app():
     app.register_blueprint(auth)
     app.register_blueprint(bp_admin)
     app.register_blueprint(notificacoes_bp)
+    
+
 
     # Página inicial pública
     @app.route('/')

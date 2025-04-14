@@ -253,30 +253,37 @@
             } else {
                 alert("Erro: " + (resultado.erro || "Não foi possível salvar.")); QD
             }
+            for (const [mes, dias] of Object.entries(resultado)) {
+                for (const [dia, eventos] of Object.entries(dias)) {
+                    resultado[mes][dia] = eventos.map(e => e.texto || e);
+                }
+            }
+
         });
 
         async function carregarNotificacoes() {
-            try {
-                const resposta = await fetch("/notificacoes/listar");
-                const dados = await resposta.json();
-                for (const [mes, dias] of Object.entries(dados)) {
-                    eventos[mes] = {};
-                    for (const [dia, lista] of Object.entries(dias)) {
-                        eventos[mes][parseInt(dia)] = lista.map(item => {
-                            const match = item.match(/^\[(.*?)\]\s*(.*?)\s*\|\s*(.*)$/);
-                            if (match) {
-                                return { tipo: match[1], titulo: match[2], descricao: match[3] };
-                            } else {
-                                return { tipo: "Outro", titulo: item, descricao: "" };
-                            }
-                        });
+    try {
+        const resposta = await fetch("/notificacoes/listar");
+        const dados = await resposta.json();
+        for (const [mes, dias] of Object.entries(dados)) {
+            eventos[mes] = {};
+            for (const [dia, lista] of Object.entries(dias)) {
+                eventos[mes][parseInt(dia)] = lista.map(item => {
+                    const texto = item.texto || item; // usa a propriedade "texto" se estiver presente
+                    const match = texto.match(/^\[(.*?)\]\s*(.*?)\s*\|\s*(.*)$/);
+                    if (match) {
+                        return { tipo: match[1], titulo: match[2], descricao: match[3] };
+                    } else {
+                        return { tipo: "Outro", titulo: texto, descricao: "" };
                     }
-                }
-                renderCalendar(currentDate);
-            } catch (error) {
-                console.error("Erro ao carregar notificações:", error);
+                });
             }
         }
+        renderCalendar(currentDate);
+    } catch (error) {
+        console.error("Erro ao carregar notificações:", error);
+    }
+}
 
         document.getElementById("prevMonth").addEventListener("click", () => {
             currentDate.setMonth(currentDate.getMonth() - 1);
@@ -316,6 +323,36 @@
             const modal = new bootstrap.Modal(document.getElementById("modalNotificacao"));
             modal.show();
         });
+        async function excluirNotificacao(id) {
+            if (confirm("Deseja excluir esta notificação?")) {
+                const res = await fetch(`/notificacoes/excluir/${id}`, { method: "DELETE" });
+                const data = await res.json();
+                if (data.status === "ok") location.reload();
+                else alert("Erro: " + (data.erro || "erro desconhecido"));
+            }
+        }
+
+        async function editarNotificacao(id) {
+            const mensagem = prompt("Nova mensagem:");
+            if (!mensagem) return;
+
+            const data = prompt("Nova data (YYYY-MM-DD):");
+            if (!data) return;
+
+            const tipo = prompt("Novo tipo:", "Alerta");
+            const descricao = prompt("Nova descrição (opcional):", "");
+
+            const res = await fetch(`/notificacoes/editar/${id}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ mensagem, tipo, data, descricao })
+            });
+
+            const resultado = await res.json();
+            if (resultado.status === "ok") location.reload();
+            else alert("Erro ao editar: " + (resultado.erro || "erro desconhecido"));
+        }
+
 
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

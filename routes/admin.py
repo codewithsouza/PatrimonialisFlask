@@ -11,6 +11,7 @@ from sqlalchemy.sql import func
 
 
 
+
 bp_admin = Blueprint('admin', __name__, url_prefix='/admin')
 
 # ROTAS DE PÁGINAS BÁSICAS
@@ -42,8 +43,25 @@ def index():
 @bp_admin.route('/clientes_cadastrados')
 @login_required
 def clientes_cadastrados():
-    clientes = Cliente.query.filter_by(usuario_id=current_user.id).all()
-    return render_template('admin/clientes_cadastrados.html', clientes=clientes)
+    pagina = request.args.get("page", 1, type=int)
+    por_pagina = 15
+
+    # Apenas clientes do usuário logado
+    query = Cliente.query.filter_by(usuario_id=current_user.id)
+    total = query.count()
+
+    clientes = query.order_by(Cliente.id)\
+        .offset((pagina - 1) * por_pagina)\
+        .limit(por_pagina)\
+        .all()
+
+    total_paginas = (total + por_pagina - 1) // por_pagina
+
+    return render_template('admin/clientes_cadastrados.html',
+                           clientes=clientes,
+                           page=pagina,
+                           total_paginas=total_paginas)
+
 
 @bp_admin.route('/divida_ativa')
 @login_required
@@ -56,7 +74,11 @@ def divida_ativa():
     total_baixadas = sum(
         d.valor_pago for d in dividas if d.cliente and d.cliente.divida is not None and d.valor_pago == d.cliente.divida
     )
-
+    
+    
+    
+    
+    
     data_atualizacao = datetime.now().strftime('%d/%m/%Y %H:%M')
 
     return render_template(

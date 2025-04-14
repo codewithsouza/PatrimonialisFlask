@@ -335,6 +335,40 @@
     </div>
   </div>
 </div>
+<nav aria-label="Navegação de páginas">
+  <ul class="pagination justify-content-center">
+    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('admin.clientes_cadastrados', page=1) }}" aria-label="Primeira">
+        «
+      </a>
+    </li>
+
+    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('admin.clientes_cadastrados', page=page-1) }}" aria-label="Anterior">
+        ‹
+      </a>
+    </li>
+
+    <li class="page-item disabled">
+      <span class="page-link">
+        Página {{ page }} de {{ total_paginas }}
+      </span>
+    </li>
+
+    <li class="page-item {% if page >= total_paginas %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('admin.clientes_cadastrados', page=page+1) }}" aria-label="Próxima">
+        ›
+      </a>
+    </li>
+
+    <li class="page-item {% if page >= total_paginas %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('admin.clientes_cadastrados', page=total_paginas) }}" aria-label="Última">
+        »
+      </a>
+    </li>
+  </ul>
+</nav>
+
 
 <!-- Scripts -->
 <script>
@@ -383,64 +417,64 @@
     });
 
     // Submissão do formulário de adicionar cliente
-    
-// JS responsável pelo envio do formulário de adicionar cliente com tratamento de valores undefined + melhorias
 
-document.getElementById("formAdicionar").addEventListener("submit", async function (e) {
-  e.preventDefault();
+    // JS responsável pelo envio do formulário de adicionar cliente com tratamento de valores undefined + melhorias
 
-  let formData = new FormData(this);
-  let clienteData = {
-    nome: formData.get("nome") || "",
-    cnpj: formData.get("cnpj") || "",
-    regime: formData.get("regime") || "",
-    divida: parseFloat((formData.get("divida") || "0").replace(",", ".")),
-    contrato: formData.get("contrato") || "",
-    segmento: formData.get("segmento") || "",
-    logradouro: formData.get("logradouro") || "",
-    numero: formData.get("numero") || "",
-    bairro: formData.get("bairro") || "",
-    municipio: formData.get("municipio") || "",
-    email: formData.get("email") || "",
-    telefone: formData.get("telefone") || "",
-    cep: formData.get("cep") || "",
-    monitoramento: formData.get("monitoramento") ? true : false,
-    data_monitoramento: formData.get("data_monitoramento") || "",
-    situacao_fiscal: formData.get("situacao_fiscal") || "",
-    observacoes: formData.get("observacoes") || ""
-  };
+    document.getElementById("formAdicionar").addEventListener("submit", async function (e) {
+      e.preventDefault();
 
-  // Validação mínima obrigatória
-  if (!clienteData.nome || !clienteData.cnpj) {
-    alert("Nome e CNPJ são obrigatórios.");
-    return;
-  }
+      let formData = new FormData(this);
+      let clienteData = {
+        nome: formData.get("nome") || "",
+        cnpj: formData.get("cnpj") || "",
+        regime: formData.get("regime") || "",
+        divida: parseFloat((formData.get("divida") || "0").replace(",", ".")),
+        contrato: formData.get("contrato") || "",
+        segmento: formData.get("segmento") || "",
+        logradouro: formData.get("logradouro") || "",
+        numero: formData.get("numero") || "",
+        bairro: formData.get("bairro") || "",
+        municipio: formData.get("municipio") || "",
+        email: formData.get("email") || "",
+        telefone: formData.get("telefone") || "",
+        cep: formData.get("cep") || "",
+        monitoramento: formData.get("monitoramento") ? true : false,
+        data_monitoramento: formData.get("data_monitoramento") || "",
+        situacao_fiscal: formData.get("situacao_fiscal") || "",
+        observacoes: formData.get("observacoes") || ""
+      };
 
-  let response = await fetch("/admin/adicionar_cliente", {
-    method: "POST",
-    body: JSON.stringify(clienteData),
-    headers: {
-      "Content-Type": "application/json"
-    }
-  });
+      // Validação mínima obrigatória
+      if (!clienteData.nome || !clienteData.cnpj) {
+        alert("Nome e CNPJ são obrigatórios.");
+        return;
+      }
 
-  let result = await response.json();
+      let response = await fetch("/admin/adicionar_cliente", {
+        method: "POST",
+        body: JSON.stringify(clienteData),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
 
-  if (!response.ok) {
-    alert("Erro ao cadastrar: " + result.message);
-    return;
-  }
+      let result = await response.json();
 
-  alert(result.message);
+      if (!response.ok) {
+        alert("Erro ao cadastrar: " + result.message);
+        return;
+      }
 
-  this.reset();
+      alert(result.message);
 
-  // Oculta o modal após sucesso (se usar Bootstrap)
-  const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalAdicionar"));
-  modal.hide();
+      this.reset();
 
-  // Opcional: recarregar clientes ou atualizar tabela
-});
+      // Oculta o modal após sucesso (se usar Bootstrap)
+      const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalAdicionar"));
+      modal.hide();
+
+      // Opcional: recarregar clientes ou atualizar tabela
+    });
 
     // Submissão do formulário de editar cliente
     document.getElementById("formEditar").addEventListener("submit", async function (e) {
