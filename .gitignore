@@ -1,0 +1,60 @@
+# Ambiente virtual
+venv/
+.env
+.venv/
+ENV/
+env.bak/
+env/
+
+# Pycache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Arquivos temporários
+*.log
+*.pot
+*.pyc
+*.pyo
+*.db
+*.sqlite3
+
+# Banco de dados local (opcional)
+instance/
+*.sqlite
+*.db
+
+# VS Code
+.vscode/
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Arquivos do sistema
+*.swp
+*.swo
+*~
+
+# Jupyter notebooks (se usar Pandas)
+.ipynb_checkpoints/
+
+# Exportações
+*.csv
+*.xls
+*.xlsx
+
+# Dumps e backups
+*.bak
+*.backup
+*.old
+*.tmp
+dump.sql
+
+# Arquivos de configuração locais
+config_local.py
+.env.*
