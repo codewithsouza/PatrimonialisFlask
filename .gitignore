@@ -1,0 +1,45 @@
+# Ignore arquivos de ambiente virtual
+venv/
+.env
+.env.*
+
+# Arquivos Python compilados
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Arquivos de log
+*.log
+
+# Banco de dados local
+*.sqlite3
+
+# Cache de ferramentas
+.cache/
+.eggs/
+*.egg-info/
+dist/
+build/
+pip-wheel-metadata/
+*.egg
+
+# Jupyter
+.ipynb_checkpoints
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# PyCharm
+.idea/
+
+# Arquivos temporários
+*.bak
+*.tmp
+~$*
