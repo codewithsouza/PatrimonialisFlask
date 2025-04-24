@@ -1,0 +1,267 @@
+{% extends "admin/base.html" %}
+{% block title %}Gestão de Débitos Municipais{% endblock %}
+
+{% block content %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  .filtros {
+    flex: 1;
+    max-width: 280px;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.05);
+    min-width: 250px;
+  }
+
+  .conteudo-principal {
+    flex: 3;
+    min-width: 0;
+  }
+
+  .visualizacao, .tabela-detalhes {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.05);
+    overflow-x: auto;
+  }
+
+  .tabela-detalhes table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+  }
+
+  .tabela-detalhes th,
+  .tabela-detalhes td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap;
+  }
+
+  .tabela-detalhes th {
+    background-color: #f0f0f0;
+    font-weight: 600;
+  }
+
+  .badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    display: inline-block;
+  }
+
+  .em-aberto { background-color: #dc3545; }
+  .quitado { background-color: #28a745; }
+  .parcelado { background-color: #ffc107; color: #000; }
+
+  .btn:hover {
+    background-color: #f0f0f0;
+  }
+
+  .btn-outline-primary { border-color: #0d6efd; color: #0d6efd; }
+  .btn-outline-success { border-color: #198754; color: #198754; }
+  .btn-outline-warning { border-color: #ffc107; color: #ffc107; }
+
+  @media (max-width: 768px) {
+    .container {
+      flex-direction: column;
+    }
+
+    .filtros, .conteudo-principal {
+      width: 100% !important;
+    }
+
+    .tabela-detalhes table {
+      display: block;
+      overflow-x: auto;
+    }
+  }
+</style>
+
+<div class="container d-flex gap-4 mt-4 flex-wrap">
+
+  <!-- FILTROS -->
+  <div class="filtros">
+    <h5>Empresa</h5>
+    <select class="form-select mb-3">
+      <option>Selecionar Empresa</option>
+      <option>Empresa A</option>
+      <option>Empresa B</option>
+    </select>
+
+    <h5>Filtros Avançados</h5>
+    <label><input type="checkbox" checked> IPTU</label><br>
+    <label><input type="checkbox" checked> ISS</label><br>
+    <label><input type="checkbox" checked> Taxas de Lixo</label><br>
+    <label><input type="checkbox" checked> Iluminação Pública</label><br>
+    <label><input type="checkbox" checked> Alvará de Funcionamento</label><br>
+    <label><input type="checkbox" checked> Multas Municipais</label><br>
+    <label><input type="checkbox" checked> Aprovação de Projetos</label><br>
+
+    <strong class="d-block mt-3">Período</strong>
+    <input type="text" class="form-control" value="01/01/2023 à 31/12/2023">
+
+    <strong class="d-block mt-3">Município</strong>
+    <input type="text" class="form-control" placeholder="Todos">
+
+    <strong class="d-block mt-3">Situação</strong>
+    <select class="form-select">
+      <option>Todas</option>
+      <option>Em Aberto</option>
+      <option>Parcelado</option>
+      <option>Quitado</option>
+    </select>
+
+    <div class="text-center mt-4">
+      <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100">
+        <i class="fas fa-sign-out-alt"></i> Sair
+      </a>
+    </div>
+  </div>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <div class="conteudo-principal w-100">
+    <div class="visualizacao">
+      <h5 class="mb-3">Identificação da Empresa: <strong>Empresa A Ltda</strong></h5>
+      <p>Total da Dívida Municipal: <strong class="text-danger">R$ 12.650,00</strong></p>
+    </div>
+
+    <div class="visualizacao">
+      <h5 class="mb-3">Composição e Pagamentos</h5>
+      <div class="row">
+        <div class="col-md-6"><canvas id="grafico_composicao_municipal"></canvas></div>
+        <div class="col-md-6"><canvas id="grafico_pagamentos_municipal"></canvas></div>
+      </div>
+    </div>
+
+    <!-- TABELA DE DÉBITOS -->
+    <div class="tabela-detalhes">
+      <h4>Débitos Municipais Detalhados</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Tributo</th>
+            <th>Município</th>
+            <th>Ano</th>
+            <th>Status</th>
+            <th>Valor</th>
+            <th>PA</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>IPTU</td><td>Belo Horizonte</td><td>2023</td>
+            <td><span class="badge em-aberto">Em Aberto</span></td><td>R$ 3.200,00</td><td>PA 001</td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                <a href="/gerar_guia/PA001" class="btn btn-sm btn-outline-primary" title="Emitir Guia PDF">📄</a>
+                <button class="btn btn-sm btn-outline-success" title="Simular Parcelamento">🧮</button>
+                <button class="btn btn-sm btn-outline-warning" title="Notificar Cliente">📬</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>ISS</td><td>Contagem</td><td>2022</td>
+            <td><span class="badge parcelado">Parcelado</span></td><td>R$ 2.800,00</td><td>PA 002</td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                <a href="/gerar_guia/PA002" class="btn btn-sm btn-outline-primary" title="Emitir Guia PDF">📄</a>
+                <button class="btn btn-sm btn-outline-success" title="Simular Parcelamento">🧮</button>
+                <button class="btn btn-sm btn-outline-warning" title="Notificar Cliente">📬</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>Taxa de Lixo</td><td>Betim</td><td>2023</td>
+            <td><span class="badge quitado">Quitado</span></td><td>R$ 1.100,00</td><td>PA 003</td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                <a href="/gerar_guia/PA003" class="btn btn-sm btn-outline-primary" title="Emitir Guia PDF">📄</a>
+                <button class="btn btn-sm btn-outline-success" title="Simular Parcelamento">🧮</button>
+                <button class="btn btn-sm btn-outline-warning" title="Notificar Cliente">📬</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>Alvará</td><td>BH</td><td>2024</td>
+            <td><span class="badge em-aberto">Em Aberto</span></td><td>R$ 2.000,00</td><td>PA 004</td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                <a href="/gerar_guia/PA004" class="btn btn-sm btn-outline-primary" title="Emitir Guia PDF">📄</a>
+                <button class="btn btn-sm btn-outline-success" title="Simular Parcelamento">🧮</button>
+                <button class="btn btn-sm btn-outline-warning" title="Notificar Cliente">📬</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PARCELAMENTOS -->
+    <div class="tabela-detalhes">
+      <h4>Parcelamentos Ativos</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Tributo</th>
+            <th>Parcelas</th>
+            <th>Valor Total</th>
+            <th>Pago</th>
+            <th>Restante</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>ISS</td><td>6x</td><td>R$ 3.000,00</td><td>R$ 1.200,00</td><td>R$ 1.800,00</td></tr>
+          <tr><td>Taxa de Publicidade</td><td>4x</td><td>R$ 800,00</td><td>R$ 400,00</td><td>R$ 400,00</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ctx1 = document.getElementById('grafico_composicao_municipal');
+  new Chart(ctx1, {
+    type: 'pie',
+    data: {
+      labels: ['IPTU', 'ISS', 'Lixo', 'Iluminação', 'Alvará'],
+      datasets: [{
+        label: 'Composição da Dívida',
+        data: [3200, 2800, 1100, 1000, 2000],
+        backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1']
+      }]
+    },
+    options: {
+      plugins: { legend: { position: 'bottom' } },
+      responsive: true
+    }
+  });
+
+  const ctx2 = document.getElementById('grafico_pagamentos_municipal');
+  new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: ['Jan', 'Fev', 'Mar', 'Abr'],
+      datasets: [{
+        label: 'Pagamentos (R$)',
+        data: [800, 1200, 2100, 2700],
+        backgroundColor: '#0d6efd'
+      }]
+    },
+    options: {
+      scales: { y: { beginAtZero: true } },
+      responsive: true
+    }
+  });
+</script>
+
+{% endblock %}

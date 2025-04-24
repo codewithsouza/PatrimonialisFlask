@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Negociações</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Negociações</h1>
+        
+        {% if negociacoes %}
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Descrição</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for negociacao in negociacoes %}
+                <tr>
+                    <td>{{ negociacao.id }}</td>
+                    <td>{{ negociacao.descricao }}</td>
+                    <td>{{ negociacao.status }}</td>
+                    <td>
+                        {% if negociacao.status != 'Finalizada' %}
+                        <form action="{{ url_for('negociacoes.finalizar_negociacao', id=negociacao.id) }}" method="POST">
+                            <button type="submit" class="btn btn-success">Finalizar</button>
+                        </form>
+                        {% else %}
+                        <span class="text-success">Finalizada</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>Não há negociações para exibir.</p>
+        {% endif %}
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página de Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #a42924;
+            padding: 20px;
+            color: white;
+        }
+
+        .form-check-label,
+        .forgot-password {
+            font-size: 14px;
+        }
+
+        .login-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .login-button {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mt-3">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <section class="vh-100">
+        <div class="container py-5 h-100">
+            <div class="row d-flex align-items-center justify-content-center h-100">
+                <div class="col-md-7 col-lg-6 col-xl-5">
+                    <img src="https://img.freepik.com/vetores-gratis/conceito-de-videoconferencia-para-a-pagina-de-destino_52683-12189.jpg"
+                        class="img-fluid" alt="Phone image">
+                </div>
+                <div class="col-md-5 col-lg-4 col-xl-3 offset-xl-1">
+                    <form method="POST" action="{{ url_for('auth.login') }}">
+                        <h3 class="text-center">LOGIN ADMIN</h3>
+
+                        <label class="form-label" for="email">Endereço de e-mail</label>
+                        <div class="form-outline mb-3">
+                            <input type="email" id="email" name="email" class="form-control form-control-lg readable"
+                                required />
+                        </div>
+
+                        <label class="form-label" for="senha">Senha</label>
+                        <div class="form-outline mb-3">
+                            <input type="password" id="senha" name="senha" class="form-control form-control-lg readable"
+                                required />
+                        </div>
+
+                        <div class="login-actions">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="remember-me" checked />
+                                <label class="form-check-label" for="remember-me">Lembrar-me</label>
+                            </div>
+                            <a href="#" class="forgot-password">Esqueci minha senha</a>
+                        </div>
+                        <div class="login-button">
+                            <button type="submit" class="btn btn-primary btn-lg btn-block">Entrar</button>
+                        </div>
+                        <div class="account-text text-center mt-3">
+                            <a href="{{ url_for('auth.cadastro') }}" class="text-primary text-decoration-underline">
+                                Criar Conta
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

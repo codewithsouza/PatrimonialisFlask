@@ -1,0 +1,222 @@
+{% extends "admin/base.html" %}
+{% block title %}Débitos Federais{% endblock %}
+
+{% block content %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  .filtros {
+    flex: 1;
+    max-width: 250px;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.05);
+  }
+
+  .conteudo-principal {
+    flex: 3;
+  }
+
+  .visualizacao, .tabela-detalhes {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.05);
+  }
+
+  .tabela-detalhes table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .tabela-detalhes th,
+  .tabela-detalhes td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap;
+  }
+
+  .tabela-detalhes th {
+    background-color: #f0f0f0;
+    font-weight: 600;
+  }
+
+  .badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    display: inline-block;
+  }
+
+  .em-aberto { background-color: #dc3545; }
+  .quitado { background-color: #28a745; }
+  .parcelado { background-color: #ffc107; color: #000; }
+
+
+  .btn:hover {
+    background-color: #f0f0f0;
+  }
+
+  .btn-outline-primary { border-color: #0d6efd; color: #0d6efd; }
+  .btn-outline-success { border-color: #198754; color: #198754; }
+  .btn-outline-warning { border-color: #ffc107; color: #ffc107; }
+
+  @media (max-width: 768px) {
+    .container {
+      flex-direction: column;
+    }
+
+    .filtros, .conteudo-principal {
+      width: 100% !important;
+    }
+
+    .tabela-detalhes {
+      overflow-x: auto;
+    }
+  }
+</style>
+
+<div class="container d-flex gap-4 mt-4 flex-wrap">
+
+  <!-- Filtros -->
+  <div class="filtros">
+    <h5>Filtros</h5>
+    <label><input type="checkbox" checked> IRPJ</label><br>
+    <label><input type="checkbox" checked> CSLL</label><br>
+    <label><input type="checkbox" checked> INSS</label><br>
+    <label><input type="checkbox" checked> PIS</label><br>
+    <label><input type="checkbox" checked> COFINS</label><br>
+    <label><input type="checkbox" checked> IPI</label><br>
+    <label><input type="checkbox" checked> FGTS</label><br><br>
+
+    <strong>Período</strong>
+    <input type="text" value="01/01/2022 à 31/12/2023"
+      style="width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc; margin-top: 5px;">
+  </div>
+
+  <!-- Conteúdo -->
+  <div class="conteudo-principal w-100">
+    <div class="visualizacao mb-4">
+      <h5 class="mb-3">Empresa: SuperConsultoria LTDA</h5>
+      <p><strong>Valor Total da Dívida Federal:</strong> R$ 19.300,00</p>
+      <div class="row">
+        <div class="col-md-6"><canvas id="grafico_composicao_federal"></canvas></div>
+        <div class="col-md-6"><canvas id="grafico_pagamentos_federal"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Tabela de Débitos -->
+    <div class="tabela-detalhes mb-4">
+      <h4>Lista de Débitos Federais</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Nº Processo</th>
+            <th>Tributo</th>
+            <th>Status</th>
+            <th>Multa</th>
+            <th>Juros</th>
+            <th>Data</th>
+            <th>Valor</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>98123</td><td>IRPJ</td><td><span class="badge em-aberto">Em Aberto</span></td><td>R$ 300</td><td>R$ 120</td><td>2023</td><td>R$ 3.200,00</td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                <a href="/gerar_guia/98123" class="btn btn-sm btn-outline-primary" title="Emitir Guia em PDF">📄</a>
+                <button class="btn btn-sm btn-outline-success" title="Simular Parcelamento">🧮</button>
+                <button class="btn btn-sm btn-outline-warning" title="Notificar Cliente">📬</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>98210</td><td>CSLL</td><td><span class="badge parcelado">Parcelado</span></td><td>R$ 150</td><td>R$ 80</td><td>2022</td><td>R$ 2.800,00</td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                <a href="/gerar_guia/98210" class="btn btn-sm btn-outline-primary" title="Emitir Guia em PDF">📄</a>
+                <button class="btn btn-sm btn-outline-success" title="Simular Parcelamento">🧮</button>
+                <button class="btn btn-sm btn-outline-warning" title="Notificar Cliente">📬</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>98999</td><td>INSS Patronal</td><td><span class="badge em-aberto">Em Aberto</span></td><td>R$ 200</td><td>R$ 300</td><td>2023</td><td>R$ 4.600,00</td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                <a href="/gerar_guia/98999" class="btn btn-sm btn-outline-primary" title="Emitir Guia em PDF">📄</a>
+                <button class="btn btn-sm btn-outline-success" title="Simular Parcelamento">🧮</button>
+                <button class="btn btn-sm btn-outline-warning" title="Notificar Cliente">📬</button>
+              </div>
+            </td>
+          </tr>
+          <!-- Continue os demais da mesma forma -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tabela de Parcelamentos -->
+    <div class="tabela-detalhes">
+      <h4>Parcelamentos Ativos</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Tributo</th>
+            <th>Parcelas</th>
+            <th>Valor Parcela</th>
+            <th>Valor Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>CSLL</td><td>10</td><td>R$ 280,00</td><td>R$ 2.800,00</td></tr>
+          <tr><td>IPI</td><td>12</td><td>R$ 308,33</td><td>R$ 3.700,00</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ctx1 = document.getElementById('grafico_composicao_federal');
+  new Chart(ctx1, {
+    type: 'doughnut',
+    data: {
+      labels: ['IRPJ', 'CSLL', 'INSS', 'PIS', 'COFINS', 'IPI', 'FGTS'],
+      datasets: [{
+        label: 'Débitos Federais',
+        data: [3200, 2800, 4600, 1100, 2000, 3700, 1900],
+        backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1', '#20c997', '#fd7e14']
+      }]
+    },
+    options: {
+      plugins: { legend: { position: 'bottom' } },
+      responsive: true
+    }
+  });
+
+  const ctx2 = document.getElementById('grafico_pagamentos_federal');
+  new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: ['2021', '2022', '2023'],
+      datasets: [{
+        label: 'Pagamentos (R$)',
+        data: [2500, 3900, 5800],
+        backgroundColor: '#0d6efd'
+      }]
+    },
+    options: {
+      scales: { y: { beginAtZero: true } },
+      responsive: true
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends "admin/base.html" %}
+{% block title %}Cobrança Judicial{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  .filtros {
+    flex: 1;
+    max-width: 250px;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.05);
+  }
+  .conteudo-principal {
+    flex: 3;
+  }
+  .visualizacao, .tabela-detalhes {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.05);
+  }
+  .tabela-detalhes table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .tabela-detalhes th, .tabela-detalhes td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  .tabela-detalhes th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+  }
+  .status-ativo {
+    color: #0d6efd;
+    font-weight: bold;
+  }
+  .status-suspenso {
+    color: #ffc107;
+    font-weight: bold;
+  }
+  .status-encerrado {
+    color: #6c757d;
+    font-weight: bold;
+  }
+</style>
+
+<div class="container d-flex gap-4 mt-4">
+  <form method="get" class="filtros">
+    <h5>Filtros</h5>
+    <label>Empresa</label>
+    <select class="form-select mb-2" name="empresa" onchange="this.form.submit()">
+      <option value="todos">Todos</option>
+      {% for empresa in empresas %}
+      <option value="{{ empresa }}" {% if empresa == empresa_selecionada %}selected{% endif %}>{{ empresa }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Status</label>
+    <select class="form-select mb-2" name="status" onchange="this.form.submit()">
+      <option value="todos" {% if status == 'todos' %}selected{% endif %}>Todos</option>
+      <option value="ativo" {% if status == 'ativo' %}selected{% endif %}>Ativo</option>
+      <option value="suspenso" {% if status == 'suspenso' %}selected{% endif %}>Suspenso</option>
+      <option value="encerrado" {% if status == 'encerrado' %}selected{% endif %}>Encerrado</option>
+    </select>
+
+    <label>Vara</label>
+    <select class="form-select mb-2" name="vara" onchange="this.form.submit()">
+      <option value="todos" {% if vara == 'todos' %}selected{% endif %}>Todos</option>
+      {% for v in varas %}
+      <option value="{{ v }}" {% if v == vara %}selected{% endif %}>{{ v }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Esfera</label>
+    <select class="form-select mb-2" name="esfera" onchange="this.form.submit()">
+      <option value="todas" {% if esfera == 'todas' %}selected{% endif %}>Todas</option>
+      <option value="federal" {% if esfera == 'federal' %}selected{% endif %}>Federal</option>
+      <option value="estadual" {% if esfera == 'estadual' %}selected{% endif %}>Estadual</option>
+      <option value="municipal" {% if esfera == 'municipal' %}selected{% endif %}>Municipal</option>
+    </select>
+  </form>
+
+  <div class="conteudo-principal w-100">
+    <div class="visualizacao mb-4">
+      <h5 class="mb-3">Resumo: {{ empresa_selecionada if empresa_selecionada != 'todos' else 'Todos os Clientes' }}</h5>
+      <p><strong>Valor Total em Cobrança Judicial:</strong> R$ {{ '{:,.2f}'.format(valor_total).replace(',', 'X').replace('.', ',').replace('X', '.') }}</p>
+      <p><strong>Processos Ativos:</strong> {{ ativos }}</p>
+      <div class="row">
+        <div class="col-md-6">
+          <canvas id="grafico_status"></canvas>
+        </div>
+        <div class="col-md-6">
+          <canvas id="grafico_responsavel"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabela-detalhes mb-4">
+      <h4>Lista de Processos</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Nº Processo</th>
+            <th>Empresa</th>
+            <th>Vara</th>
+            <th>Valor</th>
+            <th>Status</th>
+            <th>Garantia</th>
+            <th>Próximo Prazo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for processo in processos %}
+          <tr>
+            <td>{{ processo.numero }}</td>
+            <td>{{ processo.empresa }}</td>
+            <td>{{ processo.vara }}</td>
+            <td>R$ {{ '{:,.2f}'.format(processo.valor or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+            <td class="status-{{ processo.status|lower }}">{{ processo.status }}</td>
+            <td>{{ processo.garantia or '-' }}</td>
+            <td {% if processo.prazos and processo.prazos <= hoje + timedelta(days=7) %} style="color:red; font-weight:bold;" {% endif %}>
+              {{ processo.prazos.strftime('%d/%m/%Y') if processo.prazos else '-' }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  new Chart(document.getElementById('grafico_status'), {
+    type: 'pie',
+    data: {
+      labels: {{ grafico_status_labels | tojson }},
+      datasets: [{
+        data: {{ grafico_status_valores | tojson }},
+        backgroundColor: ['#0d6efd', '#ffc107', '#6c757d']
+      }]
+    },
+    options: {
+      plugins: { legend: { position: 'bottom' } },
+      responsive: true
+    }
+  });
+
+  new Chart(document.getElementById('grafico_responsavel'), {
+    type: 'bar',
+    data: {
+      labels: {{ grafico_responsavel_labels | tojson }},
+      datasets: [{
+        label: 'Qtde de Processos',
+        data: {{ grafico_responsavel_valores | tojson }},
+        backgroundColor: '#0d6efd'
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+</script>
+{% endblock %}
