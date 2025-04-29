@@ -1,7 +1,7 @@
 from models.db import db
 
 class Cliente(db.Model):
-    __tablename__ = 'clientes'  # ou o nome que você estiver usando
+    __tablename__ = 'clientes'
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
@@ -26,5 +26,5 @@ class Cliente(db.Model):
     usuario_id = db.Column(db.Integer, db.ForeignKey('cadastro.id'), nullable=False)
     usuario = db.relationship('Usuario', backref=db.backref('clientes', lazy=True))
 
-
-
+    def __repr__(self):
+        return f"<Cliente {self.nome} ({self.cnpj})>"

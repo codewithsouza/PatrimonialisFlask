@@ -10,7 +10,7 @@ from config import Config
 from routes.admin import bp_admin
 from routes.auth import auth
 from routes.notificacoes import notificacoes_bp
-
+from routes.processos import bp_processos
 
 
 def create_app():
@@ -35,14 +35,15 @@ def create_app():
     app.register_blueprint(auth)
     app.register_blueprint(bp_admin)
     app.register_blueprint(notificacoes_bp)
-    
+    app.register_blueprint(bp_processos)
     
 
 
     # Página inicial pública
     @app.route('/')
     def home():
-        return render_template('public/index.html')
+        return render_template('admin/index.html')
+
 
     return app
 

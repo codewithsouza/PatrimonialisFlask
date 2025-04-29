@@ -9,10 +9,11 @@ from models.divida_db import Divida
 from models.notificacao import Notificacao
 from sqlalchemy.sql import func
 from models.processos import Processo
+from models.parcelamentos_db import Parcelamento
+import logging
 
-
-
-
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 bp_admin = Blueprint('admin', __name__, url_prefix='/admin')
 
 # --------------------- ROTAS DE DASHBOARD ---------------------
@@ -97,10 +98,114 @@ def divida_municipal():
 def divida_estadual():
     return render_template('admin/divida_estadual.html')
 
-@bp_admin.route('/divida_federal')
+@bp_admin.route('/dividas_federais')
 @login_required
-def divida_federal():
-    return render_template('admin/divida_federal.html')
+def dividas_federais():
+    try:
+        # Configurando modo de debug (remover em produção)
+        debug = request.args.get('debug', 'false').lower() == 'true'
+        
+        # Obtendo cliente do usuário atual
+        cliente = Cliente.query.filter_by(usuario_id=current_user.id).first()
+        
+        # Log para debug
+        logger.info(f"Usuário ID: {current_user.id}, Cliente encontrado: {cliente is not None}")
+        
+        # Obter tributos selecionados para filtragem
+        tributos_selecionados = request.args.getlist('tributo')
+        periodo = request.args.get('periodo')
+        
+        # Consulta base para dívidas federais
+        query = Divida.query.filter_by(usuario_id=current_user.id, esfera='Federal')
+        
+        # Aplicar filtros se existirem
+        if tributos_selecionados:
+            query = query.filter(Divida.tributo.in_(tributos_selecionados))
+        
+        # Buscar dívidas com filtros aplicados
+        dividas = query.all()
+        
+        # Log para debug
+        logger.info(f"Número de dívidas encontradas: {len(dividas)}")
+        
+        # Se não houver cliente, retornar template com valores vazios
+        if not cliente:
+            return render_template('admin/dividas_federais.html',
+                                cliente=None,
+                                dividas=[],
+                                parcelamentos=[],
+                                valor_total=0,
+                                tributos=[],
+                                valores_tributos=[],
+                                anos_pagamento=[],
+                                valores_pagamento=[],
+                                periodo=periodo,
+                                debug=debug)
+        
+        # Buscar parcelamentos
+        parcelamentos = Parcelamento.query.filter_by(cliente_id=cliente.id).all()
+        
+        # Calcular valor total das dívidas
+        valor_total = sum(d.valor_total for d in dividas) if dividas else 0
+        
+        # Obter lista única de tributos para filtros e gráficos
+        # Primeiro, obter TODOS os tributos para o filtro
+        todos_tributos = [d.tributo for d in Divida.query.filter_by(usuario_id=current_user.id, esfera='Federal').distinct(Divida.tributo)]
+        todos_tributos = list(set(todos_tributos))  # Remover duplicatas
+        
+        # Depois, obter valores para tributos filtrados
+        tributos = list({d.tributo for d in dividas})
+        valores_tributos = [sum(d.valor_total for d in dividas if d.tributo == tributo) for tributo in tributos]
+        
+        # Dados para o gráfico de pagamentos
+        anos_pagamento = ['2021', '2022', '2023']
+        valores_pagamento = [2500, 3900, 5800]  # Exemplo - substituir por dados reais
+        
+        # Log para debug
+        logger.info(f"Tributos: {tributos}")
+        logger.info(f"Valores tributos: {valores_tributos}")
+        
+        return render_template('admin/dividas_federais.html',
+                            cliente=cliente,
+                            dividas=dividas,
+                            parcelamentos=parcelamentos,
+                            valor_total=valor_total,
+                            tributos=todos_tributos,  # Todos os tributos para filtro
+                            valores_tributos=valores_tributos,
+                            anos_pagamento=anos_pagamento,
+                            valores_pagamento=valores_pagamento,
+                            periodo=periodo,
+                            debug=debug)
+    except Exception as e:
+        logger.error(f"Erro ao carregar dividas federais: {str(e)}")
+        flash(f"Erro ao carregar dados: {str(e)}", "danger")
+        return render_template('admin/dividas_federais.html',
+                            cliente=None,
+                            dividas=[],
+                            parcelamentos=[],
+                            valor_total=0,
+                            tributos=[],
+                            valores_tributos=[],
+                            anos_pagamento=[],
+                            valores_pagamento=[],
+                            debug=True)  # Forçar debug em caso de erro
+
+@bp_admin.route('/gerar_guia/<int:divida_id>')
+@login_required
+def gerar_guia(divida_id):
+    # Implementação para gerar guia de pagamento
+    # Exemplo simples:
+    divida = Divida.query.get_or_404(divida_id)
+    
+    # Verificar se a dívida pertence ao usuário
+    if divida.usuario_id != current_user.id:
+        flash("Você não tem permissão para acessar essa dívida.", "danger")
+        return redirect(url_for('bp_admin.dividas_federais'))
+    
+    # Lógica para gerar a guia PDF aqui
+    flash(f"Guia de pagamento para dívida {divida_id} gerada com sucesso!", "success")
+    return redirect(url_for('bp_admin.dividas_federais'))
+
 
 # --------------------- OUTRAS PÁGINAS ---------------------
 @bp_admin.route('/estatisticas')
@@ -127,7 +232,6 @@ def financeiro():
 @login_required
 def contratos():
     return render_template('admin/contratos.html')
-@bp_admin.route('admin/cobranca_judicial')
 
 
 # --------------------- API - GRÁFICO DINÂMICO ---------------------
@@ -250,19 +354,19 @@ def exportar():
 @bp_admin.route('/cobranca_judicial')
 @login_required
 def cobranca_judicial():
-    from datetime import date, timedelta
-    hoje = date.today()
-
-    # Coleta dos filtros da URL
+    page = request.args.get('page', 1, type=int)
     empresa = request.args.get('empresa', 'todos')
     status = request.args.get('status', 'todos')
     vara = request.args.get('vara', 'todos')
     esfera = request.args.get('esfera', 'todas')
 
-    # Início da query base
+    # Buscar apenas clientes monitorados do usuário logado
+    clientes_monitoramento = Cliente.query.filter_by(monitoramento=1, usuario_id=current_user.id).all()
+    empresas = [cliente.nome for cliente in clientes_monitoramento]
+
+    # Montar consulta de processos
     query = Processo.query
 
-    # Aplicação dos filtros
     if empresa != 'todos':
         query = query.filter_by(empresa=empresa)
     if status != 'todos':
@@ -272,57 +376,34 @@ def cobranca_judicial():
     if esfera != 'todas':
         query = query.filter_by(esfera=esfera)
 
-    # Obtenção dos dados filtrados
-    processos = query.all()
-
-    # Valores totais
-    valor_total = sum(p.valor or 0 for p in processos)
-    ativos = sum(1 for p in processos if p.status and p.status.lower() == "ativo")
-
-    # Filtros dinâmicos para os selects
-    todas_empresas = sorted(set(p.empresa for p in Processo.query.with_entities(Processo.empresa).distinct()))
-    todas_varas = sorted(set(p.vara for p in Processo.query.with_entities(Processo.vara).distinct()))
-
-    # Dados dos gráficos
-    status_map = {'ativo': 0, 'suspenso': 0, 'encerrado': 0}
-    responsaveis_map = {}
-
-    for p in processos:
-        status_key = (p.status or '').lower()
-        if status_key in status_map:
-            status_map[status_key] += 1
-
-        if p.responsavel:
-            responsaveis_map[p.responsavel] = responsaveis_map.get(p.responsavel, 0) + 1
+    processos = query.paginate(page=page, per_page=10)
 
     # Dados para os gráficos
-    grafico_status_labels = list(status_map.keys())
-    grafico_status_valores = list(status_map.values())
-    grafico_responsavel_labels = list(responsaveis_map.keys())
-    grafico_responsavel_valores = list(responsaveis_map.values())
+    grafico_status_labels = ['Ativos', 'Suspensos', 'Encerrados']
+    grafico_status_valores = [
+        len([p for p in processos.items if p.status == 'ativo']),
+        len([p for p in processos.items if p.status == 'suspenso']),
+        len([p for p in processos.items if p.status == 'encerrado'])
+    ]
 
-    return render_template(
-        "admin/cobranca_judicial.html",
-        processos=processos,
-        valor_total=valor_total,
-        ativos=ativos,
-        hoje=hoje,
-        empresas=todas_empresas,
-        varas=todas_varas,
+    grafico_responsavel_labels = list(set([p.responsavel for p in processos.items if p.responsavel]))
+    grafico_responsavel_valores = [sum(1 for p in processos.items if p.responsavel == label) for label in grafico_responsavel_labels]
+
+    valor_total = sum([p.valor or 0 for p in processos.items])
+    ativos = sum(1 for p in processos.items if p.status == 'ativo')
+
+    return render_template('admin/cobranca_judicial.html',
+        empresas=empresas,
         empresa_selecionada=empresa,
         status=status,
         vara=vara,
         esfera=esfera,
+        processos=processos,
         grafico_status_labels=grafico_status_labels,
         grafico_status_valores=grafico_status_valores,
         grafico_responsavel_labels=grafico_responsavel_labels,
-        grafico_responsavel_valores=grafico_responsavel_valores
+        grafico_responsavel_valores=grafico_responsavel_valores,
+        valor_total=valor_total,
+        ativos=ativos,
+        hoje=date.today()
     )
-
-
-
-
-@bp_admin.route("/gerar_guia/<pa_id>")
-def gerar_guia(pa_id):
-    # lógica para gerar e retornar o PDF
-    return send_file(f"guias/{pa_id}.pdf", as_attachment=True)

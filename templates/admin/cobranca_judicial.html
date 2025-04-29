@@ -116,7 +116,7 @@
           </tr>
         </thead>
         <tbody>
-          {% for processo in processos %}
+          {% for processo in processos.items %}
           <tr>
             <td>{{ processo.numero }}</td>
             <td>{{ processo.empresa }}</td>
@@ -131,6 +131,36 @@
           {% endfor %}
         </tbody>
       </table>
+
+      <!-- Paginação -->
+      <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+          {% if processos.has_prev %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('admin.cobranca_judicial', page=processos.prev_num, empresa=empresa_selecionada, status=status, vara=vara, esfera=esfera) }}">Anterior</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">Anterior</span>
+          </li>
+          {% endif %}
+
+          <li class="page-item disabled">
+            <span class="page-link">Página {{ processos.page }} de {{ processos.pages }}</span>
+          </li>
+
+          {% if processos.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('admin.cobranca_judicial', page=processos.next_num, empresa=empresa_selecionada, status=status, vara=vara, esfera=esfera) }}">Próxima</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">Próxima</span>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+
     </div>
   </div>
 </div>
