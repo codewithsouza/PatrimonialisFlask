@@ -6,13 +6,13 @@ class Divida(db.Model):
     __tablename__ = 'dividas'
 
     id = db.Column(db.Integer, primary_key=True)
-    
+
     # Informações financeiras
     valor_principal = db.Column(db.Numeric(12, 2), default=0)
     multa = db.Column(db.Numeric(12, 2), default=0)
     juros = db.Column(db.Numeric(12, 2), default=0)
     valor_pago = db.Column(db.Numeric(12, 2), default=0)
-    valor_total = db.Column(db.Numeric(12, 2), default=0)  # Valor da dívida calculado (pode preencher no momento do cadastro)
+    valor_total = db.Column(db.Numeric(12, 2), default=0)
 
     # Datas importantes
     data_apuracao = db.Column(db.Date)  # Quando foi gerada
@@ -21,21 +21,23 @@ class Divida(db.Model):
 
     # Identificações
     esfera = db.Column(db.String(20))  # 'Federal', 'Estadual', 'Municipal'
-    tributo = db.Column(db.String(100))  # IRPJ, ICMS, ISS, etc.
+    tributo = db.Column(db.String(100))  # Ex: IPTU, ISS, etc.
     origem = db.Column(db.String(100))  # Ex: Auto de infração, confissão de dívida etc.
-    numero_processo = db.Column(db.String(100))  # Número do processo administrativo (se tiver)
+    numero_processo = db.Column(db.String(100))  # Número do processo administrativo (se houver)
+    municipio = db.Column(db.String(120))  # Preenchido no formulário
+    pa = db.Column(db.String(100))  # Código do processo administrativo
+    ano = db.Column(db.Integer)  # Ano da dívida, ex: 2025
 
     # Status
-    status = db.Column(db.String(50))  # Ex: Ativo, Parcelado, Suspenso, Baixado
+    status = db.Column(db.String(50))  # Ex: Em Aberto, Parcelado, Quitado
 
     # Observações gerais
     observacoes = db.Column(db.Text)
 
-    # Controle de relacionamento
+    # Relacionamento com cliente e usuário
     cliente_id = db.Column(db.Integer, db.ForeignKey('clientes.id'), nullable=False)
     usuario_id = db.Column(db.Integer, db.ForeignKey('cadastro.id'), nullable=False)
 
-    # Relacionamentos ORM
     cliente = relationship("Cliente", backref="dividas")
     usuario = relationship("Usuario", backref="dividas")
 

@@ -91,7 +91,19 @@ def divida_ativa():
 @bp_admin.route('/divida_municipal')
 @login_required
 def divida_municipal():
-    return render_template('admin/divida_municipal.html')
+    cliente = Cliente.query.filter_by(usuario_id=current_user.id).first()
+
+    # Se não houver cliente, redireciona com alerta
+    if not cliente:
+        flash("Nenhum cliente encontrado para este usuário.", "warning")
+        return redirect(url_for("admin.index"))
+
+    # Busca as dívidas municipais do cliente
+    dividas = Divida.query.filter_by(usuario_id=current_user.id, cliente_id=cliente.id, esfera="Municipal").all()
+
+    return render_template('admin/divida_municipal.html', cliente=cliente, dividas=dividas)
+
+
 
 @bp_admin.route('/divida_estadual')
 @login_required
@@ -407,3 +419,34 @@ def cobranca_judicial():
         ativos=ativos,
         hoje=date.today()
     )
+@bp_admin.route("/adicionar_debito", methods=["POST"])
+@login_required
+def adicionar_debito():
+    try:
+        dados = request.get_json()
+
+        cliente_id = int(dados.get("cliente_id"))  # vem do formulário oculto
+
+        cliente = Cliente.query.filter_by(id=cliente_id, usuario_id=current_user.id).first()
+        if not cliente:
+            return jsonify({"mensagem": "Cliente não encontrado para este usuário."}), 400
+
+        novo_debito = Divida(
+            tributo=dados.get("tributo"),
+            municipio=dados.get("municipio"),
+            ano=int(dados.get("ano")),
+            status=dados.get("status"),
+            valor_total=float(dados.get("valor")),
+            pa=dados.get("pa"),
+            esfera='Municipal',  # ← Aqui está a mudança
+            cliente_id=cliente.id,
+            usuario_id=current_user.id
+)
+
+
+        db.session.add(novo_debito)
+        db.session.commit()
+        return jsonify({"mensagem": "Débito adicionado com sucesso"}), 200
+
+    except Exception as e:
+        return jsonify({"mensagem": f"Erro ao salvar o débito: {str(e)}"}), 500

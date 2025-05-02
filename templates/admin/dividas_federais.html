@@ -132,7 +132,7 @@
   <!-- Filtros -->
   <div class="filtros">
     <h5>Filtros</h5>
-    <form id="filtroForm" method="get" action="{{ url_for('bp_admin.dividas_federais') }}">
+    <form id="filtroForm" method="get" action="{{ url_for('admin.dividas_federais') }}">
       {% for tributo in tributos %}
       <label>
         <input type="checkbox" name="tributo" value="{{ tributo }}" 
