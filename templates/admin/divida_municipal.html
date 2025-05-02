@@ -117,7 +117,7 @@
     <select class="form-select mb-3" id="cliente_id_select" onchange="filtrarCliente()">
       <option value="" {% if not cliente %}selected{% endif %}>Todas as Empresas</option>
       {% for c in clientes %}
-        <option value="{{ c.id }}" {% if cliente and c.id == cliente.id %}selected{% endif %}>{{ c.nome }}</option>
+      <option value="{{ c.id }}" {% if cliente and c.id==cliente.id %}selected{% endif %}>{{ c.nome }}</option>
       {% endfor %}
     </select>
 
@@ -274,22 +274,23 @@
         <div class="modal-body">
           <div class="row g-3">
             <div class="col-md-6">
-              <label for="tributo" class="form-label">Tributo</label>
-              <select class="form-select" id="tributo" required>
-                <option selected disabled>Selecione</option>
-                <option>IPTU</option>
-                <option>ISS</option>
-                <option>Taxa de Lixo</option>
-                <option>Iluminação Pública</option>
-                <option>Alvará</option>
-                <option>Multas Municipais</option>
-                <option>Aprovação de Projetos</option>
+              <label for="municipio" class="form-label">Município</label>
+              <select id="municipio" class="form-select" onchange="carregarTributos()" required>
+                <option selected disabled>Selecione a cidade</option>
+                <option>Belo Horizonte</option>
+                <option>São Paulo</option>
+                <option>Contagem</option>
+                <option>Betim</option>
               </select>
             </div>
+
             <div class="col-md-6">
-              <label for="municipio" class="form-label">Município</label>
-              <input type="text" class="form-control" id="municipio" placeholder="Ex: Belo Horizonte" required>
+              <label for="tributo" class="form-label">Tributo</label>
+              <select id="tributo" class="form-select mt-2" required>
+                <option selected disabled>Selecione o tributo</option>
+              </select>
             </div>
+
             <div class="col-md-4">
               <label for="ano" class="form-label">Ano</label>
               <input type="number" class="form-control" id="ano" placeholder="2025" required>
@@ -323,15 +324,18 @@
 </div>
 
 <script>
+  const composicao = {{ composicao| tojson }};
+  const pagamentos = {{ pagamentos| tojson }};
+
   const ctx1 = document.getElementById('grafico_composicao_municipal');
   new Chart(ctx1, {
     type: 'pie',
     data: {
-      labels: ['IPTU', 'ISS', 'Lixo', 'Iluminação', 'Alvará'],
+      labels: Object.keys(composicao),
       datasets: [{
         label: 'Composição da Dívida',
-        data: [3200, 2800, 1100, 1000, 2000],
-        backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1']
+        data: Object.values(composicao),
+        backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1', '#20c997', '#fd7e14']
       }]
     },
     options: {
@@ -344,10 +348,10 @@
   new Chart(ctx2, {
     type: 'bar',
     data: {
-      labels: ['Jan', 'Fev', 'Mar', 'Abr'],
+      labels: Object.keys(pagamentos),
       datasets: [{
         label: 'Pagamentos (R$)',
-        data: [800, 1200, 2100, 2700],
+        data: Object.values(pagamentos),
         backgroundColor: '#0d6efd'
       }]
     },
@@ -400,7 +404,34 @@
   function filtrarCliente() {
     const clienteId = document.getElementById('cliente_id_select').value;
     const url = clienteId ? `/admin/divida_municipal?cliente_id=${clienteId}` : '/admin/divida_municipal';
-    window.location.href = url;}
+    window.location.href = url;
+  }
+
+  function carregarTributos() {
+    const municipio = document.getElementById('municipio').value;
+    const tributoSelect = document.getElementById('tributo');
+
+    // Limpa o select atual
+    tributoSelect.innerHTML = '<option selected disabled>Selecione o tributo</option>';
+
+    // Define os tributos por cidade
+    const tributosPorCidade = {
+      'Belo Horizonte': ['IPTU', 'ISSQN', 'Taxa de Fiscalização', 'Taxa de Lixo'],
+      'São Paulo': ['IPTU', 'ISS', 'Taxa de Ocupação do Solo', 'Taxa de Resíduos'],
+      'Contagem': ['IPTU', 'Taxa de Vigilância Sanitária', 'Taxa de Alvará'],
+      'Betim': ['IPTU', 'ISS', 'Taxa de Iluminação Pública', 'Taxa Ambiental']
+    };
+
+    const tributos = tributosPorCidade[municipio] || [];
+
+    // Adiciona os tributos ao select
+    tributos.forEach(t => {
+      const option = document.createElement('option');
+      option.value = t;
+      option.textContent = t;
+      tributoSelect.appendChild(option);
+    });
+  }
 
 </script>
 

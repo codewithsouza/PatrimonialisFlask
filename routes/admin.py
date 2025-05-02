@@ -91,9 +91,8 @@ def divida_ativa():
 @bp_admin.route('/divida_municipal')
 @login_required
 def divida_municipal():
-    cliente_id = request.args.get("cliente_id")
-
-    # Lista de clientes com monitoramento ativo
+    cliente_id = request.args.get("cliente_id", type=int)
+    
     clientes = Cliente.query.filter_by(usuario_id=current_user.id, monitoramento=True).all()
 
     if cliente_id:
@@ -103,13 +102,29 @@ def divida_municipal():
         cliente = None
         dividas = Divida.query.filter_by(usuario_id=current_user.id, esfera="Municipal").all()
 
-    return render_template('admin/divida_municipal.html', cliente=cliente, clientes=clientes, dividas=dividas)
+    total_divida_municipal = sum(d.valor_total for d in dividas)
+
+    # dados para gráficos
+    composicao = {}
+    pagamentos = {}
+
+    for d in dividas:
+        composicao[d.tributo] = composicao.get(d.tributo, 0) + d.valor_total
+        ano = str(d.ano)
+        pagamentos[ano] = pagamentos.get(ano, 0) + d.valor_total
+
+    return render_template(
+        "admin/divida_municipal.html",
+        clientes=clientes,
+        cliente=cliente,
+        dividas=dividas,
+        composicao=composicao,
+        pagamentos=pagamentos,
+        total_divida_municipal=total_divida_municipal
+    )
 
 
-@bp_admin.route('/divida_estadual')
-@login_required
-def divida_estadual():
-    return render_template('admin/divida_estadual.html')
+
 
 @bp_admin.route('/dividas_federais')
 @login_required
@@ -451,3 +466,97 @@ def adicionar_debito():
 
     except Exception as e:
         return jsonify({"mensagem": f"Erro ao salvar o débito: {str(e)}"}), 500
+
+@bp_admin.route("/api/tributos_por_cidade")
+@login_required
+def tributos_por_cidade():
+    cidade = request.args.get("cidade")
+    if not cidade:
+        return jsonify([])
+
+    resultados = db.session.execute(
+        db.select(func.distinct(TributoMunicipal.tributo)).where(TributoMunicipal.cidade == cidade)
+    ).scalars().all()
+
+    return jsonify(resultados)
+
+@bp_admin.route('/api/tributos_por_municipio')
+@login_required
+def tributos_por_municipio():
+    municipio = request.args.get('municipio')
+
+    if not municipio:
+        return jsonify([])
+
+    resultados = db.session.execute(
+        "SELECT tributo FROM tributos_municipais WHERE municipio = :municipio",
+        {"municipio": municipio}
+    ).fetchall()
+
+    tributos = [r[0] for r in resultados]
+    return jsonify(tributos)
+
+
+@bp_admin.route("/adicionar_debito_estadual", methods=["POST"])
+@login_required
+def adicionar_debito_estadual():
+    try:
+        data = request.get_json()
+
+        cliente_id = int(data.get("cliente_id"))
+        cliente = Cliente.query.filter_by(id=cliente_id, usuario_id=current_user.id).first()
+        if not cliente:
+            return jsonify({"mensagem": "Cliente não encontrado para este usuário."}), 400
+
+        novo_debito = Divida(
+            tributo=data.get("tributo"),
+            municipio=data.get("estado"),
+            ano=int(data.get("ano")),
+            status=data.get("status"),
+            valor_total=float(data.get("valor")),
+            pa=data.get("pa"),
+            esfera='Estadual',
+            cliente_id=cliente.id,
+            usuario_id=current_user.id
+        )
+
+        db.session.add(novo_debito)
+        db.session.commit()
+        return jsonify({"mensagem": "Débito estadual adicionado com sucesso!"}), 200
+
+    except Exception as e:
+        return jsonify({"mensagem": f"Erro ao salvar o débito: {str(e)}"}), 500
+
+@bp_admin.route('/divida_estadual')
+@login_required
+def divida_estadual():
+    cliente_id = request.args.get("cliente_id", type=int)
+
+    clientes = Cliente.query.filter_by(usuario_id=current_user.id, monitoramento=True).all()
+
+    if cliente_id:
+        cliente = Cliente.query.filter_by(id=cliente_id, usuario_id=current_user.id).first()
+        dividas = Divida.query.filter_by(usuario_id=current_user.id, cliente_id=cliente.id, esfera="Estadual").all()
+    else:
+        cliente = None
+        dividas = Divida.query.filter_by(usuario_id=current_user.id, esfera="Estadual").all()
+
+    total_divida_estadual = sum(d.valor_total for d in dividas)
+
+    composicao = {}
+    pagamentos = {}
+
+    for d in dividas:
+        composicao[d.tributo] = composicao.get(d.tributo, 0) + d.valor_total
+        ano = str(d.ano)
+        pagamentos[ano] = pagamentos.get(ano, 0) + d.valor_total
+
+    return render_template(
+        "admin/divida_estadual.html",
+        clientes=clientes,
+        cliente=cliente,
+        dividas=dividas,
+        composicao=composicao,
+        pagamentos=pagamentos,
+        total_divida_estadual=total_divida_estadual
+    )
