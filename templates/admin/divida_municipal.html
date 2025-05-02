@@ -114,11 +114,15 @@
 
   <div class="filtros">
     <h5>Empresa</h5>
-    <select class="form-select mb-3">
-      <option>Selecionar Empresa</option>
-      <option>Empresa A</option>
-      <option>Empresa B</option>
+    <select class="form-select mb-3" id="cliente_id_select" onchange="filtrarCliente()">
+      <option value="" {% if not cliente %}selected{% endif %}>Todas as Empresas</option>
+      {% for c in clientes %}
+        <option value="{{ c.id }}" {% if cliente and c.id == cliente.id %}selected{% endif %}>{{ c.nome }}</option>
+      {% endfor %}
     </select>
+
+    </select>
+
 
     <h5>Filtros Avançados</h5>
     <label><input type="checkbox" checked> IPTU</label><br>
@@ -187,89 +191,34 @@
         </thead>
         <tbody>
           {% if dividas %}
-            {% for d in dividas %}
-              <tr>
-                <td>{{ d.tributo }}</td>
-                <td>{{ d.municipio }}</td>
-                <td>{{ d.ano }}</td>
-                <td>
-                  <span class="badge {% if d.status == 'Em Aberto' %}em-aberto{% elif d.status == 'Parcelado' %}parcelado{% else %}quitado{% endif %}">
-                    {{ d.status }}
-                  </span>
-                </td>
-                <td>R$ {{ "%.2f"|format(d.valor_total) }}</td>
-                <td>{{ d.pa }}</td>
-                <td>
-                  <div class="d-flex gap-1 flex-wrap">
-                    <a href="/gerar_guia/{{ d.id }}" class="btn btn-sm btn-outline-primary" title="Emitir Guia PDF">📄</a>
-                    <button class="btn btn-sm btn-outline-success" title="Simular Parcelamento">🧮</button>
-                    <button class="btn btn-sm btn-outline-warning" title="Notificar Cliente">📬</button>
-                  </div>
-                </td>
-              </tr>
-            {% endfor %}
+          {% for d in dividas %}
+          <tr>
+            <td>{{ d.tributo }}</td>
+            <td>{{ d.municipio }}</td>
+            <td>{{ d.ano }}</td>
+            <td>
+              <span
+                class="badge {% if d.status == 'Em Aberto' %}em-aberto{% elif d.status == 'Parcelado' %}parcelado{% else %}quitado{% endif %}">
+                {{ d.status }}
+              </span>
+            </td>
+            <td>R$ {{ "%.2f"|format(d.valor_total) }}</td>
+            <td>{{ d.pa }}</td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                <a href="/gerar_guia/{{ d.id }}" class="btn btn-sm btn-outline-primary" title="Emitir Guia PDF">📄</a>
+                <button class="btn btn-sm btn-outline-success" title="Simular Parcelamento">🧮</button>
+                <button class="btn btn-sm btn-outline-warning" title="Notificar Cliente">📬</button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
           {% else %}
-            <tr>
-              <td>IPTU</td>
-              <td>Belo Horizonte</td>
-              <td>2023</td>
-              <td><span class="badge em-aberto">Em Aberto</span></td>
-              <td>R$ 3.200,00</td>
-              <td>PA 001</td>
-              <td>
-                <div class="d-flex gap-1 flex-wrap">
-                  <a href="/gerar_guia/PA001" class="btn btn-sm btn-outline-primary" title="Emitir Guia PDF">📄</a>
-                  <button class="btn btn-sm btn-outline-success" title="Simular Parcelamento">🧮</button>
-                  <button class="btn btn-sm btn-outline-warning" title="Notificar Cliente">📬</button>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td>ISS</td>
-              <td>Contagem</td>
-              <td>2022</td>
-              <td><span class="badge parcelado">Parcelado</span></td>
-              <td>R$ 2.800,00</td>
-              <td>PA 002</td>
-              <td>
-                <div class="d-flex gap-1 flex-wrap">
-                  <a href="/gerar_guia/PA002" class="btn btn-sm btn-outline-primary" title="Emitir Guia PDF">📄</a>
-                  <button class="btn btn-sm btn-outline-success" title="Simular Parcelamento">🧮</button>
-                  <button class="btn btn-sm btn-outline-warning" title="Notificar Cliente">📬</button>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td>Taxa de Lixo</td>
-              <td>Betim</td>
-              <td>2023</td>
-              <td><span class="badge quitado">Quitado</span></td>
-              <td>R$ 1.100,00</td>
-              <td>PA 003</td>
-              <td>
-                <div class="d-flex gap-1 flex-wrap">
-                  <a href="/gerar_guia/PA003" class="btn btn-sm btn-outline-primary" title="Emitir Guia PDF">📄</a>
-                  <button class="btn btn-sm btn-outline-success" title="Simular Parcelamento">🧮</button>
-                  <button class="btn btn-sm btn-outline-warning" title="Notificar Cliente">📬</button>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td>Alvará</td>
-              <td>BH</td>
-              <td>2024</td>
-              <td><span class="badge em-aberto">Em Aberto</span></td>
-              <td>R$ 2.000,00</td>
-              <td>PA 004</td>
-              <td>
-                <div class="d-flex gap-1 flex-wrap">
-                  <a href="/gerar_guia/PA004" class="btn btn-sm btn-outline-primary" title="Emitir Guia PDF">📄</a>
-                  <button class="btn btn-sm btn-outline-success" title="Simular Parcelamento">🧮</button>
-                  <button class="btn btn-sm btn-outline-warning" title="Notificar Cliente">📬</button>
-                </div>
-              </td>
-            </tr>
+          <tr>
+            <td colspan="7" class="text-center">Nenhum débito cadastrado para esta empresa.</td>
+          </tr>
           {% endif %}
+
         </tbody>
       </table>
     </div>
@@ -312,7 +261,8 @@
 <input type="hidden" id="cliente_id" value="{{ cliente.id }}">
 
 <!-- MODAL ADICIONAR DÉBITO -->
-<div class="modal fade" id="modalAdicionarDebito" tabindex="-1" aria-labelledby="modalAdicionarDebitoLabel" aria-hidden="true">
+<div class="modal fade" id="modalAdicionarDebito" tabindex="-1" aria-labelledby="modalAdicionarDebitoLabel"
+  aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <form id="formAdicionarDebito">
@@ -437,6 +387,21 @@
       alert("Erro ao conectar com o servidor.");
     }
   });
+
+  document.getElementById('cliente_id_select').addEventListener('change', function () {
+    document.getElementById('cliente_id').value = this.value;
+  });
+
+  function selecionarCliente() {
+    const clienteId = document.getElementById('cliente_id_select').value;
+    window.location.href = `/admin/divida_municipal?cliente_id=${clienteId}`;
+  }
+
+  function filtrarCliente() {
+    const clienteId = document.getElementById('cliente_id_select').value;
+    const url = clienteId ? `/admin/divida_municipal?cliente_id=${clienteId}` : '/admin/divida_municipal';
+    window.location.href = url;}
+
 </script>
 
 {% endblock %}

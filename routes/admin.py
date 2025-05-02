@@ -91,18 +91,19 @@ def divida_ativa():
 @bp_admin.route('/divida_municipal')
 @login_required
 def divida_municipal():
-    cliente = Cliente.query.filter_by(usuario_id=current_user.id).first()
+    cliente_id = request.args.get("cliente_id")
 
-    # Se não houver cliente, redireciona com alerta
-    if not cliente:
-        flash("Nenhum cliente encontrado para este usuário.", "warning")
-        return redirect(url_for("admin.index"))
+    # Lista de clientes com monitoramento ativo
+    clientes = Cliente.query.filter_by(usuario_id=current_user.id, monitoramento=True).all()
 
-    # Busca as dívidas municipais do cliente
-    dividas = Divida.query.filter_by(usuario_id=current_user.id, cliente_id=cliente.id, esfera="Municipal").all()
+    if cliente_id:
+        cliente = Cliente.query.filter_by(id=cliente_id, usuario_id=current_user.id).first()
+        dividas = Divida.query.filter_by(usuario_id=current_user.id, cliente_id=cliente.id, esfera="Municipal").all()
+    else:
+        cliente = None
+        dividas = Divida.query.filter_by(usuario_id=current_user.id, esfera="Municipal").all()
 
-    return render_template('admin/divida_municipal.html', cliente=cliente, dividas=dividas)
-
+    return render_template('admin/divida_municipal.html', cliente=cliente, clientes=clientes, dividas=dividas)
 
 
 @bp_admin.route('/divida_estadual')
