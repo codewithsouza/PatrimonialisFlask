@@ -1,0 +1,42 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Financeiro{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Negociação de Dívida</h2>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Parcelamentos em Andamento</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Valor Total</th>
+                            <th>Parcelas</th>
+                            <th>Status</th>
+                            <th>Data Início</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for parcelamento in parcelamentos %}
+                        <tr>
+                            <td>{{ parcelamento.cliente.nome if parcelamento.cliente else 'N/A' }}</td>
+                            <td>R$ {{ "{:,.2f}".format(parcelamento.valor_total).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+                            <td>{{ parcelamento.numero_parcelas }}</td>
+                            <td>{{ parcelamento.status }}</td>
+                            <td>{{ parcelamento.data_inicio.strftime('%d/%m/%Y') if parcelamento.data_inicio else 'N/A' }}</td>
+                            <td>
+                                <a href="#" class="btn btn-sm btn-primary">Detalhes</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

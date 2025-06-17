@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+{% block title %}Cobrança Judicial{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Cobrança Judicial</h2>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Processos em Andamento</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Número do Processo</th>
+                            <th>Cliente</th>
+                            <th>Status</th>
+                            <th>Data</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for processo in processos %}
+                        <tr>
+                            <td>{{ processo.numero }}</td>
+                            <td>{{ processo.cliente.nome if processo.cliente else 'N/A' }}</td>
+                            <td>{{ processo.status }}</td>
+                            <td>{{ processo.data.strftime('%d/%m/%Y') if processo.data else 'N/A' }}</td>
+                            <td>
+                                <a href="#" class="btn btn-sm btn-primary">Detalhes</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

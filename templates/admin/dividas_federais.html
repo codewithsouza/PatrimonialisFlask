@@ -1,0 +1,336 @@
+{% extends "admin/base.html" %}
+{% block title %}Débitos Federais{% endblock %}
+
+{% block content %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  .filtros {
+    flex: 1;
+    max-width: 250px;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .conteudo-principal {
+    flex: 3;
+  }
+
+  .visualizacao,
+  .tabela-detalhes {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .tabela-detalhes table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .tabela-detalhes th,
+  .tabela-detalhes td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap;
+  }
+
+  .tabela-detalhes th {
+    background-color: #f0f0f0;
+    font-weight: 600;
+  }
+
+  .badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    display: inline-block;
+  }
+
+  .em-aberto {
+    background-color: #dc3545;
+  }
+
+  .quitado {
+    background-color: #28a745;
+  }
+
+  .parcelado {
+    background-color: #ffc107;
+    color: #000;
+  }
+
+  .btn:hover {
+    background-color: #f0f0f0;
+  }
+
+  .btn-outline-primary {
+    border-color: #0d6efd;
+    color: #0d6efd;
+  }
+
+  .btn-outline-success {
+    border-color: #198754;
+    color: #198754;
+  }
+
+  .btn-outline-warning {
+    border-color: #ffc107;
+    color: #ffc107;
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      flex-direction: column;
+    }
+
+    .filtros,
+    .conteudo-principal {
+      width: 100% !important;
+    }
+
+    .tabela-detalhes {
+      overflow-x: auto;
+    }
+  }
+  
+  /* Adicionado para detecção visual de elementos */
+  .debug-info {
+    background-color: #ffe;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+</style>
+
+<!-- Área de debug (remova após resolver os problemas) -->
+{% if debug %}
+<div class="debug-info">
+  <h5>Informações de Debug:</h5>
+  <ul>
+    <li>Cliente encontrado: {{ cliente is not none }}</li>
+    <li>Nome do cliente: {{ cliente.nome if cliente else 'Nenhum' }}</li>
+    <li>Número de dívidas: {{ dividas|length }}</li>
+    <li>Tributos: {{ tributos|join(', ') }}</li>
+    <li>Valores tributos: {{ valores_tributos }}</li>
+    <li>Anos pagamento: {{ anos_pagamento|join(', ') }}</li>
+  </ul>
+</div>
+{% endif %}
+
+<div class="container d-flex gap-4 mt-4 flex-wrap">
+
+  <!-- Filtros -->
+  <div class="filtros">
+    <h5>Filtros</h5>
+    <form id="filtroForm" method="get" action="{{ url_for('admin.dividas_federais') }}">
+      {% for tributo in tributos %}
+      <label>
+        <input type="checkbox" name="tributo" value="{{ tributo }}" 
+            {% if request.args.getlist('tributo') and tributo in request.args.getlist('tributo') or not request.args.getlist('tributo') %}checked{% endif %}> 
+        {{ tributo }}
+      </label><br>
+      {% endfor %}
+      <br>
+      <strong>Período</strong>
+      <input type="text" name="periodo" id="periodo" value="{{ periodo if periodo else '01/01/2022 à 31/12/2023' }}"
+        style="width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc; margin-top: 5px;">
+      <br><br>
+      <button type="submit" class="btn btn-primary btn-sm w-100">Aplicar Filtros</button>
+    </form>
+  </div>
+
+  <!-- Conteúdo -->
+  <div class="conteudo-principal w-100">
+    <div class="visualizacao mb-4">
+      {% if cliente %}
+      <h5 class="mb-3">Empresa: {{ cliente.nome }}</h5>
+      {% else %}
+      <h5 class="mb-3 text-danger">Nenhum cliente cadastrado!</h5>
+      {% endif %}
+
+      <p><strong>Valor Total da Dívida Federal:</strong> R$ {{ '%.2f'|format(valor_total) }}</p>
+      <div class="row">
+        <div class="col-md-6">
+          {% if tributos|length > 0 and valores_tributos|length > 0 %}
+          <canvas id="grafico_composicao_federal"></canvas>
+          {% else %}
+          <div class="alert alert-warning">Não há dados suficientes para gerar o gráfico de composição.</div>
+          {% endif %}
+        </div>
+        <div class="col-md-6">
+          {% if anos_pagamento|length > 0 and valores_pagamento|length > 0 %}
+          <canvas id="grafico_pagamentos_federal"></canvas>
+          {% else %}
+          <div class="alert alert-warning">Não há dados suficientes para gerar o gráfico de pagamentos.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabela de Débitos -->
+    <div class="tabela-detalhes mb-4">
+      <h4>Lista de Débitos Federais</h4>
+      {% if dividas|length > 0 %}
+      <table>
+        <thead>
+          <tr>
+            <th>Nº Processo</th>
+            <th>Tributo</th>
+            <th>Status</th>
+            <th>Multa</th>
+            <th>Juros</th>
+            <th>Data</th>
+            <th>Valor</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for divida in dividas %}
+          <tr>
+            <td>{{ divida.numero_processo }}</td>
+            <td>{{ divida.tributo }}</td>
+            <td>
+              {% if divida.status == 'Em Aberto' %}
+              <span class="badge em-aberto">Em Aberto</span>
+              {% elif divida.status == 'Parcelado' %}
+              <span class="badge parcelado">Parcelado</span>
+              {% else %}
+              <span class="badge quitado">Quitado</span>
+              {% endif %}
+            </td>
+            <td>R$ {{ '%.2f'|format(divida.multa) }}</td>
+            <td>R$ {{ '%.2f'|format(divida.juros) }}</td>
+            <td>{{ divida.data_apuracao.year if divida.data_apuracao else '-' }}</td>
+            <td>R$ {{ '%.2f'|format(divida.valor_total) }}</td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                <a href="{{ url_for('bp_admin.gerar_guia', divida_id=divida.id) }}" class="btn btn-sm btn-outline-primary"
+                  title="Emitir Guia em PDF">📄</a>
+                <button class="btn btn-sm btn-outline-success" title="Simular Parcelamento"
+                  onclick="simularParcelamento({{ divida.id }})">🧮</button>
+                <button class="btn btn-sm btn-outline-warning" title="Notificar Cliente"
+                  onclick="notificarCliente({{ divida.id }})">📬</button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="alert alert-info">Nenhum débito federal encontrado.</div>
+      {% endif %}
+    </div>
+
+    <!-- Tabela de Parcelamentos -->
+    <div class="tabela-detalhes">
+      <h4>Parcelamentos Ativos</h4>
+      {% if parcelamentos|length > 0 %}
+      <table>
+        <thead>
+          <tr>
+            <th>Tributo</th>
+            <th>Parcelas</th>
+            <th>Valor Parcela</th>
+            <th>Valor Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in parcelamentos %}
+          <tr>
+            <td>{{ p.tributo }}</td>
+            <td>{{ p.parcelas }}</td>
+            <td>R$ {{ '%.2f'|format(p.valor_parcela) }}</td>
+            <td>R$ {{ '%.2f'|format(p.valor_total) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="alert alert-info">Nenhum parcelamento ativo encontrado.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+  // Função para verificar se há dados suficientes para criar os gráficos
+  function temDadosSuficientes() {
+    return {{ (tributos|length > 0 and valores_tributos|length > 0)|tojson }} && 
+           {{ (anos_pagamento|length > 0 and valores_pagamento|length > 0)|tojson }};
+  }
+
+  // Funções para as ações da tabela
+  function simularParcelamento(dividaId) {
+    alert('Simulação de parcelamento para divida ID: ' + dividaId);
+    // Implementar modal ou redirecionamento para simulação
+  }
+
+  function notificarCliente(dividaId) {
+    alert('Notificação para cliente sobre divida ID: ' + dividaId);
+    // Implementar modal ou redirecionamento para notificação
+  }
+
+  // Criar gráficos apenas se houver dados
+  document.addEventListener('DOMContentLoaded', function() {
+    if (temDadosSuficientes()) {
+      try {
+        // Gráfico de composição
+        const ctx1 = document.getElementById('grafico_composicao_federal');
+        if (ctx1) {
+          new Chart(ctx1, {
+            type: 'doughnut',
+            data: {
+              labels: {{ tributos|tojson }},
+              datasets: [{
+                label: 'Débitos Federais',
+                data: {{ valores_tributos|tojson }},
+                backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1', '#20c997', '#fd7e14']
+              }]
+            },
+            options: {
+              plugins: {
+                legend: { position: 'bottom' }
+              },
+              responsive: true
+            }
+          });
+        }
+
+        // Gráfico de pagamentos
+        const ctx2 = document.getElementById('grafico_pagamentos_federal');
+        if (ctx2) {
+          new Chart(ctx2, {
+            type: 'bar',
+            data: {
+              labels: {{ anos_pagamento|tojson }},
+              datasets: [{
+                label: 'Pagamentos (R$)',
+                data: {{ valores_pagamento|tojson }},
+                backgroundColor: '#0d6efd'
+              }]
+            },
+            options: {
+              scales: {
+                y: { beginAtZero: true }
+              },
+              responsive: true
+            }
+          });
+        }
+      } catch (e) {
+        console.error('Erro ao criar gráficos:', e);
+      }
+    }
+  });
+</script>
+{% endblock %}

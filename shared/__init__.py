@@ -1,0 +1,1 @@
+# Módulo compartilhado entre admin e cliente 

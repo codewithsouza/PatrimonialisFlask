@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Processos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">Meus Processos</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Resumo</h5>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Processos Ativos:</span>
+                        <strong>0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Próxima Audiência:</span>
+                        <strong>-</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Última Atualização:</span>
+                        <strong>-</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Processos em Andamento</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Número do Processo</th>
+                                    <th>Vara</th>
+                                    <th>Status</th>
+                                    <th>Última Movimentação</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="5" class="text-center">Nenhum processo encontrado</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

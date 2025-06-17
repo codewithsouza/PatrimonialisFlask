@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoramento de Dívidas - Patrimonialis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary-color: #64748b;
+            --success-color: #16a34a;
+            --danger-color: #dc2626;
+            --warning-color: #d97706;
+            --info-color: #0891b2;
+            --background: #f1f5f9;
+            --card-bg: #fff;
+            --border-radius: 18px;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--background);
+        }
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            box-shadow: 0 2px 4px rgba(0,0,0,0.07);
+        }
+        .card, .stat-card, .table-container {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.07);
+            border: none;
+        }
+        .stat-card {
+            padding: 1.5rem 1.2rem;
+            margin-bottom: 1.2rem;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+        .stat-label {
+            color: var(--secondary-color);
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        .search-container {
+            position: relative;
+            width: 100%;
+        }
+        .search-container i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-color);
+        }
+        .search-input {
+            width: 100%;
+            padding-left: 2.5rem;
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+            background-color: #fff;
+            height: 48px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        .search-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.15rem rgba(37, 99, 235, 0.15);
+        }
+        .form-select {
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+            height: 48px;
+            font-size: 1rem;
+        }
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.15rem rgba(37, 99, 235, 0.15);
+        }
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.15);
+        }
+        .table-container {
+            margin-top: 1.5rem;
+            padding: 1.5rem 1.2rem;
+        }
+        .table thead th {
+            background: #f3f4f6;
+            color: var(--primary-dark);
+            font-weight: 600;
+            font-size: 0.95rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .table tbody tr:hover {
+            background: #f1f5f9;
+        }
+        .table td, .table th {
+            vertical-align: middle;
+        }
+        .pagination .page-link {
+            border-radius: 8px;
+            color: var(--primary-dark);
+            font-weight: 500;
+        }
+        .pagination .active .page-link {
+            background: var(--primary-color);
+            color: #fff;
+        }
+        .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .status-active {
+            background: #e0f2fe;
+            color: var(--primary-color);
+        }
+        .status-inactive {
+            background: #fee2e2;
+            color: var(--danger-color);
+        }
+        .status-paid {
+            background: #dcfce7;
+            color: var(--success-color);
+        }
+        .status-suspended {
+            background: #fef9c3;
+            color: var(--warning-color);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('admin.index') }}">
+                <img src="{{ url_for('static', filename='imagens/patrimonialis_logo.jpeg') }}" alt="Logo" height="40" class="rounded-circle">
+            </a>
+            <div class="d-flex align-items-center">
+                <h1 class="text-white mb-0 h4">Monitoramento de Dívidas</h1>
+            </div>
+            <a href="{{ url_for('admin.adicionar_cliente') }}" class="btn btn-light">
+                <i class="fas fa-plus me-2"></i>Novo Cliente
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <!-- Cards de Estatísticas -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">
+                        <i class="fas fa-file-invoice-dollar me-2"></i>
+                        Total de Dívidas Ativas
+                    </div>
+                    <div class="stat-value" id="cardTotalDivida" data-original="{{ '%.2f'|format(total_dividas) }}">
+                        R$ {{ '%.2f'|format(total_dividas) }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card danger">
+                    <div class="stat-label">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Total de Dívidas em Cobrança
+                    </div>
+                    <div class="stat-value">--</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card warning">
+                    <div class="stat-label">
+                        <i class="fas fa-pause-circle me-2"></i>
+                        Suspensas
+                    </div>
+                    <div class="stat-value" id="cardTotalPago" data-original="{{ '%.2f'|format(total_pago) }}">
+                        R$ {{ '%.2f'|format(total_pago) }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card success">
+                    <div class="stat-label">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Dívidas Baixadas
+                    </div>
+                    <div class="stat-value" id="cardBaixadas" data-original="{{ '%.2f'|format(total_baixadas) }}">
+                        R$ {{ '%.2f'|format(total_baixadas) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros e Ações -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="search-container">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="search" class="form-control search-input" 
+                                           placeholder="Pesquisar por nome, ID ou CNPJ..." oninput="filtrarClientes()">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select">
+                                    <option value="">Contrato</option>
+                                    <option value="Ativo">Ativo</option>
+                                    <option value="Inativo">Inativo</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select">
+                                    <option value="">Regime</option>
+                                    <option value="Simples">Simples</option>
+                                    <option value="Lucro Real">Lucro Real</option>
+                                    <option value="Lucro Presumido">Lucro Presumido</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button onclick="exportarTabela()" class="btn btn-primary w-100">
+                                    <i class="fas fa-file-excel me-2"></i>Exportar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela -->
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table" id="clientesTabela">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>CNPJ</th>
+                                <th>Regime</th>
+                                <th>Contrato</th>
+                                <th class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cliente in clientes %}
+                            {% set valor_pago = cliente.dividas | map(attribute='valor_pago') | sum %}
+                            <tr class="cliente-row" data-id="{{ cliente.id }}" data-nome="{{ cliente.nome }}"
+                                data-divida-total="R$ {{ '%.2f'|format(cliente.divida or 0) }}"
+                                data-pago="R$ {{ '%.2f'|format(valor_pago) }}"
+                                data-baixadas="R$ {{ '%.2f'|format(valor_pago if valor_pago == (cliente.divida or 0) and valor_pago > 0 else 0) }}"
+                                onclick="filtrarPorCliente(this)">
+                                <td>{{ cliente.id }}</td>
+                                <td>{{ cliente.nome }}</td>
+                                <td>{{ cliente.cnpj }}</td>
+                                <td>{{ cliente.regime }}</td>
+                                <td>
+                                    <span class="status-badge {{ 'status-active' if cliente.contrato == 'Ativo' else 'status-inactive' }}">
+                                        {{ cliente.contrato }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-icon btn-info me-2" title="Visualizar"
+                                            onclick="event.stopPropagation(); abrirModal(
+                                                {{ cliente.id }},
+                                                {{ cliente.nome|tojson }},
+                                                {{ '%.2f'|format(cliente.divida or 0)|tojson }},
+                                                {{ '%.2f'|format(valor_pago)|tojson }}
+                                            )">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-warning me-2" title="Simular Pagamento"
+                                            onclick="abrirSimulacao({{ cliente.id }})">
+                                        <i class="fas fa-coins"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-danger" title="Excluir"
+                                            onclick="excluirCliente({{ cliente.id }})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paginação -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <div>
+                <span id="paginacaoInfo" class="text-muted"></span>
+            </div>
+            <nav>
+                <ul class="pagination mb-0">
+                    <li class="page-item">
+                        <button class="page-link" onclick="mudarPagina(-1)">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                    </li>
+                    <li class="page-item">
+                        <button class="page-link" onclick="mudarPagina(1)">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes -->
+    <div class="modal fade" id="modalCliente" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalhes do Cliente</h5>
+                    <button type="button" class="btn-close" onclick="fecharModal()"></button>
+                </div>
+                <div class="modal-body" id="clienteDetalhes">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Simulação -->
+    <div class="modal fade" id="modalSimulacao" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Simular Pagamento</h5>
+                    <button type="button" class="btn-close" onclick="fecharSimulacao()"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Cliente</label>
+                        <p id="simulacaoNome" class="form-control-plaintext"></p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Valor em aberto</label>
+                        <p id="simulacaoAberto" class="form-control-plaintext"></p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="valorPagamento" class="form-label">Valor a pagar</label>
+                        <input type="number" step="0.01" id="valorPagamento" class="form-control">
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Após pagamento, o valor restante será: <span id="valorRestante">R$ 0,00</span>
+                    </div>
+                    <button onclick="calcularSimulacao()" class="btn btn-primary w-100">
+                        Simular
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let clienteSelecionado = false;
+        let paginaAtual = 1;
+        const linhasPorPagina = 7;
+
+        function filtrarClientes() {
+            const termo = document.getElementById('search').value.toLowerCase();
+            const linhas = document.querySelectorAll('.cliente-row');
+
+            linhas.forEach(row => {
+                const nome = row.dataset.nome.toLowerCase();
+                const id = row.dataset.id.toString();
+                const cnpj = row.cells[2].innerText.toLowerCase();
+                const corresponde = nome.includes(termo) || id.includes(termo) || cnpj.includes(termo);
+                row.style.display = corresponde ? '' : 'none';
+            });
+
+            paginaAtual = 1;
+            exibirPagina(paginaAtual);
+        }
+
+        function exibirPagina(pagina) {
+            const linhas = Array.from(document.querySelectorAll('.cliente-row'));
+            const visiveis = linhas.filter(row => row.style.display !== 'none');
+            const totalPaginas = Math.ceil(visiveis.length / linhasPorPagina);
+            
+            paginaAtual = Math.max(1, Math.min(pagina, totalPaginas));
+            
+            const inicio = (paginaAtual - 1) * linhasPorPagina;
+            const fim = inicio + linhasPorPagina;
+            
+            visiveis.forEach((row, index) => {
+                row.style.display = (index >= inicio && index < fim) ? '' : 'none';
+            });
+            
+            document.getElementById('paginacaoInfo').textContent = 
+                `Mostrando ${inicio + 1}-${Math.min(fim, visiveis.length)} de ${visiveis.length} registros`;
+        }
+
+        function mudarPagina(delta) {
+            exibirPagina(paginaAtual + delta);
+        }
+
+        function filtrarPorCliente(row) {
+            const id = row.dataset.id;
+            const nome = row.dataset.nome;
+            const dividaTotal = row.dataset.dividaTotal;
+            const pago = row.dataset.pago;
+            const baixadas = row.dataset.baixadas;
+
+            document.getElementById('cardTotalDivida').textContent = dividaTotal;
+            document.getElementById('cardTotalPago').textContent = pago;
+            document.getElementById('cardBaixadas').textContent = baixadas;
+
+            clienteSelecionado = true;
+            document.getElementById('nomeClienteSelecionado').textContent = nome;
+            document.getElementById('clienteSelecionadoBanner').classList.remove('hidden');
+        }
+
+        function abrirModal(id, nome, dividaTotal, pago) {
+            const modal = new bootstrap.Modal(document.getElementById('modalCliente'));
+            const detalhes = document.getElementById('clienteDetalhes');
+            
+            detalhes.innerHTML = `
+                <div class="mb-3">
+                    <label class="form-label">Nome</label>
+                    <p class="form-control-plaintext">${nome}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Dívida Total</label>
+                    <p class="form-control-plaintext">R$ ${dividaTotal}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Valor Pago</label>
+                    <p class="form-control-plaintext">R$ ${pago}</p>
+                </div>
+            `;
+            
+            modal.show();
+        }
+
+        function fecharModal() {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalCliente'));
+            modal.hide();
+        }
+
+        function abrirSimulacao(id) {
+            const modal = new bootstrap.Modal(document.getElementById('modalSimulacao'));
+            const row = document.querySelector(`.cliente-row[data-id="${id}"]`);
+            
+            document.getElementById('simulacaoNome').textContent = row.dataset.nome;
+            document.getElementById('simulacaoAberto').textContent = row.dataset.dividaTotal;
+            
+            modal.show();
+        }
+
+        function fecharSimulacao() {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalSimulacao'));
+            modal.hide();
+        }
+
+        function calcularSimulacao() {
+            const valorPagamento = parseFloat(document.getElementById('valorPagamento').value) || 0;
+            const valorAberto = parseFloat(document.getElementById('simulacaoAberto').textContent.replace('R$ ', ''));
+            const valorRestante = valorAberto - valorPagamento;
+            
+            document.getElementById('valorRestante').textContent = `R$ ${valorRestante.toFixed(2)}`;
+        }
+
+        function excluirCliente(id) {
+            if (confirm('Tem certeza que deseja excluir este cliente?')) {
+                // Implementar lógica de exclusão
+                console.log('Excluir cliente:', id);
+            }
+        }
+
+        function exportarTabela() {
+            // Implementar lógica de exportação
+            console.log('Exportar tabela');
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            exibirPagina(1);
+        });
+    </script>
+</body>
+
+</html>

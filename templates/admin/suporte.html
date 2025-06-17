@@ -1,0 +1,35 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Suporte{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Auditoria de Dívida</h2>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Formulário de Auditoria</h5>
+            <form>
+                <div class="mb-3">
+                    <label for="cliente" class="form-label">Cliente</label>
+                    <select class="form-select" id="cliente" name="cliente">
+                        <option value="">Selecione um cliente</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="tipo_auditoria" class="form-label">Tipo de Auditoria</label>
+                    <select class="form-select" id="tipo_auditoria" name="tipo_auditoria">
+                        <option value="federal">Federal</option>
+                        <option value="estadual">Estadual</option>
+                        <option value="municipal">Municipal</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="observacoes" class="form-label">Observações</label>
+                    <textarea class="form-control" id="observacoes" name="observacoes" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Iniciar Auditoria</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

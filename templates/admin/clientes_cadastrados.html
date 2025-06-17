@@ -1,0 +1,632 @@
+{% extends 'admin/index.html' %}
+
+{% block content %}
+<div class="container">
+  <h2 class="mt-4">Clientes Cadastrados</h2>
+
+  <div class="row mt-4 align-items-end">
+    <!-- Esquerda: Botões de Importar e Adicionar -->
+    <div class="col-md-6 d-flex gap-2">
+      <form id="formImportar" method="POST" action="{{ url_for('admin.importar') }}" enctype="multipart/form-data">
+        <input type="file" id="inputArquivo" name="file" accept=".xlsx, .csv" hidden required>
+        <label for="inputArquivo" class="btn btn-success" style="min-width: 120px;">
+          <i class="fas fa-file-import"></i> Importar
+        </label>
+      </form>
+      <button class="btn btn-primary" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#modalAdicionar">
+        <i class="fas fa-plus"></i> Adicionar
+      </button>
+    </div>
+
+    <!-- Direita: Pesquisa, Filtro e Exportar -->
+    <div class="col-md-6 d-flex gap-2 justify-content-end align-items-center">
+      <input type="text" class="form-control" id="searchInput" placeholder="Pesquisar Cliente..."
+        style="max-width: 250px;">
+      <div class="btn-group">
+        <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown"
+          aria-expanded="false" title="Filtrar">
+          <i class="fas fa-filter"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end p-3" style="min-width: 250px;">
+          <li>
+            <div class="form-check">
+              <input class="form-check-input filter-option" type="checkbox" value="Ativo" id="filterAtivo">
+              <label class="form-check-label" for="filterAtivo">Ativo</label>
+            </div>
+          </li>
+          <li>
+            <div class="form-check">
+              <input class="form-check-input filter-option" type="checkbox" value="Encerrado" id="filterEncerrado">
+              <label class="form-check-label" for="filterEncerrado">Encerrado</label>
+            </div>
+          </li>
+          <li>
+            <div class="form-check">
+              <input class="form-check-input filter-option" type="checkbox" value="Comércio" id="filterComercio">
+              <label class="form-check-label" for="filterComercio">Comércio</label>
+            </div>
+          </li>
+          <li>
+            <div class="form-check">
+              <input class="form-check-input filter-option" type="checkbox" value="Prestação de Serviços"
+                id="filterPrestacao">
+              <label class="form-check-label" for="filterPrestacao">Prestação de Serviços</label>
+            </div>
+          </li>
+          <li>
+            <div class="form-check">
+              <input class="form-check-input filter-option" type="checkbox" value="Indústria" id="filterIndustria">
+              <label class="form-check-label" for="filterIndustria">Indústria</label>
+            </div>
+          </li>
+          <li>
+            <div class="form-check">
+              <input class="form-check-input filter-option" type="checkbox" value="Transporte" id="filterTransporte">
+              <label class="form-check-label" for="filterTransporte">Transporte</label>
+            </div>
+          </li>
+          <li>
+            <div class="form-check">
+              <input class="form-check-input filter-option" type="checkbox" value="Rural" id="filterRural">
+              <label class="form-check-label" for="filterRural">Rural</label>
+            </div>
+          </li>
+          <li>
+            <div class="form-check">
+              <input class="form-check-input filter-option" type="checkbox" value="3º Setor" id="filter3Setor">
+              <label class="form-check-label" for="filter3Setor">3º Setor</label>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <a href="{{ url_for('admin.exportar') }}" class="btn btn-warning" style="min-width: 120px;">
+        <i class="fas fa-file-download"></i> Exportar
+      </a>
+    </div>
+  </div>
+
+  <!-- Tabela de Clientes -->
+  <div class="table-responsive">
+    <table class="table table-hover mt-4">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Nome</th>
+          <th>CNPJ</th>
+          <th>Regime</th>
+          <th>Dívida</th>
+          <th>Contrato</th>
+          <th>Segmento</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="clientesTable">
+        {% for cliente in clientes %}
+        <tr data-id="{{ cliente.id }}" data-logradouro="{{ cliente.logradouro }}" data-numero="{{ cliente.numero }}"
+          data-bairro="{{ cliente.bairro }}" data-municipio="{{ cliente.municipio }}" data-email="{{ cliente.email }}"
+          data-telefone="{{ cliente.telefone }}" data-cep="{{ cliente.cep }}"
+          data-monitoramento="{{ cliente.monitoramento }}" data-data_monitoramento="{{ cliente.data_monitoramento }}"
+          data-situacao_fiscal="{{ cliente.situacao_fiscal }}" data-observacoes="{{ cliente.observacoes }}">
+          <td>{{ cliente.id }}</td>
+          <td class="nome">{{ cliente.nome }}</td>
+          <td class="cnpj">{{ cliente.cnpj }}</td>
+          <td class="regime">{{ cliente.regime }}</td>
+          <td class="divida">R$ {{ '{:,.2f}'.format(cliente.divida).replace(',', 'v').replace('.', ',').replace('v',
+            '.') }}</td>
+          <td class="contrato">{{ cliente.contrato }}</td>
+          <td class="segmento">{{ cliente.segmento }}</td>
+          <td>
+            <button class="btn btn-info btn-sm view-btn" data-id="{{ cliente.id }}">
+              <i class="fas fa-eye"></i>
+            </button>
+            <button class="btn btn-warning btn-sm edit-btn" data-id="{{ cliente.id }}">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger btn-sm delete-btn" data-id="{{ cliente.id }}">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal de Adicionar Cliente com aparência de janela -->
+<div class="modal fade" id="modalAdicionar" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 1200px; width: 100%;">
+    <div class="modal-content" style="height: 80vh;">
+      <div class="modal-header">
+        <h5 class="modal-title">Adicionar Cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="overflow-y: auto;">
+        <form id="formAdicionar">
+          <!-- Campos básicos -->
+          <input type="text" name="nome" class="form-control mb-2" placeholder="Nome" required>
+          <input type="text" name="cnpj" class="form-control mb-2" placeholder="CNPJ" required>
+          <input type="text" name="regime" class="form-control mb-2" placeholder="Regime" required>
+          <input type="number" step="0.01" name="divida" class="form-control mb-2" placeholder="Dívida" required>
+
+          <label for="contrato">Contrato</label>
+          <select name="contrato" class="form-control mb-2" required>
+            <option value="Ativo">Ativo</option>
+            <option value="Encerrado">Encerrado</option>
+          </select>
+
+          <label for="segmento">Segmento</label>
+          <select name="segmento" class="form-control mb-2" required>
+            <option value="" disabled selected>Escolha um segmento</option>
+            <option value="Comércio">Comércio</option>
+            <option value="Prestação de Serviços">Prestação de Serviços</option>
+            <option value="Indústria">Indústria</option>
+            <option value="Transporte">Transporte</option>
+            <option value="Rural">Rural</option>
+            <option value="3º Setor">3º Setor</option>
+          </select>
+
+          <!-- Campos extras já existentes -->
+          <hr>
+          <h6>Informações Adicionais</h6>
+          <input type="text" name="logradouro" class="form-control mb-2" placeholder="Logradouro" required>
+          <input type="text" name="numero" class="form-control mb-2" placeholder="Número" required>
+          <input type="text" name="bairro" class="form-control mb-2" placeholder="Bairro" required>
+          <input type="text" name="municipio" class="form-control mb-2" placeholder="Município" required>
+          <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
+          <input type="text" name="telefone" class="form-control mb-2" placeholder="Telefone" required>
+          <input type="text" name="cep" class="form-control mb-2" placeholder="CEP" required>
+
+          <!-- Novos campos -->
+          <hr>
+          <h6>Novas Informações</h6>
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" name="monitoramento" id="monitoramento">
+            <label class="form-check-label" for="monitoramento">Cliente em Monitoramento?</label>
+          </div>
+          <div id="divDataMonitoramento" style="display: none;">
+            <label for="data_monitoramento">Data do Monitoramento</label>
+            <input type="date" name="data_monitoramento" class="form-control mb-2" id="data_monitoramento">
+          </div>
+          <input type="text" name="situacao_fiscal" class="form-control mb-2" placeholder="Situação Fiscal">
+          <textarea name="observacoes" class="form-control mb-2" placeholder="Observações" rows="3"></textarea>
+
+          <button type="submit" class="btn btn-primary w-100">Adicionar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Editar Cliente (com os novos campos) -->
+<div class="modal fade" id="modalEditar" tabindex="-1" aria-labelledby="modalEditarLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <form id="formEditar" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalEditarLabel">Editar Cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body row g-3">
+
+        <input type="hidden" name="id">
+
+        <div class="col-md-6">
+          <label for="nome" class="form-label">Nome</label>
+          <input type="text" name="nome" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label for="cnpj" class="form-label">CNPJ</label>
+          <input type="text" name="cnpj" class="form-control" required>
+        </div>
+
+        <div class="col-md-6">
+          <label for="regime" class="form-label">Regime Tributário</label>
+          <input type="text" name="regime" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label for="divida" class="form-label">Dívida</label>
+          <input type="text" name="divida" class="form-control">
+        </div>
+
+        <div class="col-md-6">
+          <label for="contrato" class="form-label">Contrato</label>
+          <input type="text" name="contrato" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label for="segmento" class="form-label">Segmento</label>
+          <input type="text" name="segmento" class="form-control">
+        </div>
+
+        <div class="col-md-6">
+          <label for="logradouro" class="form-label">Logradouro</label>
+          <input type="text" name="logradouro" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label for="numero" class="form-label">Número</label>
+          <input type="text" name="numero" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label for="bairro" class="form-label">Bairro</label>
+          <input type="text" name="bairro" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label for="municipio" class="form-label">Município</label>
+          <input type="text" name="municipio" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label for="email" class="form-label">E-mail</label>
+          <input type="email" name="email" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label for="telefone" class="form-label">Telefone</label>
+          <input type="text" name="telefone" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label for="cep" class="form-label">CEP</label>
+          <input type="text" name="cep" class="form-control">
+        </div>
+
+        <div class="col-md-6">
+          <label for="situacao_fiscal" class="form-label">Situação Fiscal</label>
+          <input type="text" name="situacao_fiscal" class="form-control">
+        </div>
+        <div class="col-md-12">
+          <label for="observacoes" class="form-label">Observações</label>
+          <textarea name="observacoes" class="form-control" rows="2"></textarea>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-check mt-4">
+            <input class="form-check-input" type="checkbox" name="monitoramento" id="monitoramento_edit">
+            <label class="form-check-label" for="monitoramento_edit">
+              Monitoramento Ativo?
+            </label>
+          </div>
+        </div>
+        <div class="col-md-6" id="divDataMonitoramento_edit" style="display:none;">
+          <label for="data_monitoramento" class="form-label">Data do Monitoramento</label>
+          <input type="date" name="data_monitoramento" class="form-control">
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- Modal de Visualizar Cliente (apenas leitura) com informações extras -->
+<div class="modal fade" id="modalVisualizar" tabindex="-1">
+  <div class="modal-dialog modal-xl" style="max-width: 90%;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detalhes do Cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Campos básicos -->
+        <div class="mb-2"><strong>Nome:</strong> <span id="viewNome"></span></div>
+        <div class="mb-2"><strong>CNPJ:</strong> <span id="viewCNPJ"></span></div>
+        <div class="mb-2"><strong>Regime:</strong> <span id="viewRegime"></span></div>
+        <div class="mb-2"><strong>Situação Fiscal:</strong> <span id="viewSituacaoFiscal"></span></div>
+        <div class="mb-2"><strong>Contrato:</strong> <span id="viewContrato"></span></div>
+        <div class="mb-2"><strong>Segmento:</strong> <span id="viewSegmento"></span></div>
+        <hr>
+        <!-- Campos extras já existentes -->
+        <div class="mb-2"><strong>Logradouro:</strong> <span id="viewLogradouro"></span></div>
+        <div class="mb-2"><strong>Número:</strong> <span id="viewNumero"></span></div>
+        <div class="mb-2"><strong>Bairro:</strong> <span id="viewBairro"></span></div>
+        <div class="mb-2"><strong>Município:</strong> <span id="viewMunicipio"></span></div>
+        <div class="mb-2"><strong>Email:</strong> <span id="viewEmail"></span></div>
+        <div class="mb-2"><strong>Telefone:</strong> <span id="viewTelefone"></span></div>
+        <div class="mb-2"><strong>CEP:</strong> <span id="viewCEP"></span></div>
+        <hr>
+        <!-- Novos campos: Monitoramento, Dívida, Data e Observações -->
+        <div class="mb-2"><strong>Monitoramento:</strong>
+          <span id="viewMonitoramento"></span>
+        </div>
+        <div class="mb-2"><strong>Dívida:</strong> <span id="viewDivida"></span></div>
+        <div class="mb-2"><strong>Data do Monitoramento:</strong> <span id="viewDataMonitoramento"></span></div>
+        <div class="mb-2"><strong>Observações:</strong> <span id="viewObservacoes"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<nav aria-label="Navegação de páginas">
+  <ul class="pagination justify-content-center">
+    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('admin.clientes_cadastrados', page=1) }}" aria-label="Primeira">
+        «
+      </a>
+    </li>
+
+    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('admin.clientes_cadastrados', page=page-1) }}" aria-label="Anterior">
+        ‹
+      </a>
+    </li>
+
+    <li class="page-item disabled">
+      <span class="page-link">
+        Página {{ page }} de {{ total_paginas }}
+      </span>
+    </li>
+
+    <li class="page-item {% if page >= total_paginas %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('admin.clientes_cadastrados', page=page+1) }}" aria-label="Próxima">
+        ›
+      </a>
+    </li>
+
+    <li class="page-item {% if page >= total_paginas %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('admin.clientes_cadastrados', page=total_paginas) }}" aria-label="Última">
+        »
+      </a>
+    </li>
+  </ul>
+</nav>
+
+
+<!-- Scripts -->
+<script>
+  // Função para converter data de YYYY-MM-DD para DD/MM/YYYY
+  function formatDatePortuguese(dateStr) {
+    if (!dateStr) return "";
+    const parts = dateStr.split("-");
+    if (parts.length !== 3) return dateStr;
+    return parts[2] + "/" + parts[1] + "/" + parts[0];
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    carregarClientes();
+
+    // Controla exibição do campo de data no modal de adicionar
+    const monitoramentoCheckbox = document.getElementById("monitoramento");
+    const divDataMonitoramento = document.getElementById("divDataMonitoramento");
+    monitoramentoCheckbox.addEventListener("change", function () {
+      divDataMonitoramento.style.display = this.checked ? "block" : "none";
+    });
+
+    // Controla exibição do campo de data no modal de editar
+    const monitoramentoCheckboxEdit = document.getElementById("monitoramento_edit");
+    const divDataMonitoramentoEdit = document.getElementById("divDataMonitoramento_edit");
+    monitoramentoCheckboxEdit.addEventListener("change", function () {
+      divDataMonitoramentoEdit.style.display = this.checked ? "block" : "none";
+    });
+
+    function filterRows() {
+      let searchValue = document.getElementById("searchInput").value.toLowerCase();
+      let selectedFilters = Array.from(document.querySelectorAll('.filter-option:checked'))
+        .map(input => input.value.toLowerCase());
+      let rows = document.querySelectorAll("#clientesTable tr");
+      rows.forEach(function (row) {
+        let rowText = row.innerText.toLowerCase();
+        // Se nenhum filtro for selecionado, ou se algum filtro for encontrado na linha, exibe a linha
+        let matchesFilters = selectedFilters.length === 0 || selectedFilters.some(filter => rowText.indexOf(filter) > -1);
+        let matchesSearch = rowText.indexOf(searchValue) > -1;
+        row.style.display = (matchesSearch && matchesFilters) ? "" : "none";
+      });
+    }
+
+    document.getElementById("searchInput").addEventListener("keyup", filterRows);
+    document.querySelectorAll('.filter-option').forEach(input => {
+      input.addEventListener("change", filterRows);
+    });
+
+    // Submissão do formulário de adicionar cliente
+
+    // JS responsável pelo envio do formulário de adicionar cliente com tratamento de valores undefined + melhorias
+
+    document.getElementById("formAdicionar").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      let formData = new FormData(this);
+      let clienteData = {
+        nome: formData.get("nome") || "",
+        cnpj: formData.get("cnpj") || "",
+        regime: formData.get("regime") || "",
+        divida: parseFloat((formData.get("divida") || "0").replace(",", ".")),
+        contrato: formData.get("contrato") || "",
+        segmento: formData.get("segmento") || "",
+        logradouro: formData.get("logradouro") || "",
+        numero: formData.get("numero") || "",
+        bairro: formData.get("bairro") || "",
+        municipio: formData.get("municipio") || "",
+        email: formData.get("email") || "",
+        telefone: formData.get("telefone") || "",
+        cep: formData.get("cep") || "",
+        monitoramento: formData.get("monitoramento") ? true : false,
+        data_monitoramento: formData.get("data_monitoramento") || "",
+        situacao_fiscal: formData.get("situacao_fiscal") || "",
+        observacoes: formData.get("observacoes") || ""
+      };
+
+      // Validação mínima obrigatória
+      if (!clienteData.nome || !clienteData.cnpj) {
+        alert("Nome e CNPJ são obrigatórios.");
+        return;
+      }
+
+      let response = await fetch("/admin/adicionar_cliente", {
+        method: "POST",
+        body: JSON.stringify(clienteData),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+
+      let result = await response.json();
+
+      if (!response.ok) {
+        alert("Erro ao cadastrar: " + result.message);
+        return;
+      }
+
+      alert(result.message);
+
+      this.reset();
+
+      // Oculta o modal após sucesso (se usar Bootstrap)
+      const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalAdicionar"));
+      modal.hide();
+
+      // Opcional: recarregar clientes ou atualizar tabela
+    });
+
+    // Submissão do formulário de editar cliente
+    document.getElementById("formEditar").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      let formData = new FormData(this);
+      let clienteData = {
+        id: formData.get("id"),
+        nome: formData.get("nome"),
+        cnpj: formData.get("cnpj"),
+        regime: formData.get("regime"),
+        divida: parseFloat(formData.get("divida")),
+        contrato: formData.get("contrato"),
+        segmento: formData.get("segmento"),
+        logradouro: formData.get("logradouro"),
+        numero: formData.get("numero"),
+        bairro: formData.get("bairro"),
+        municipio: formData.get("municipio"),
+        email: formData.get("email"),
+        telefone: formData.get("telefone"),
+        cep: formData.get("cep"),
+        monitoramento: formData.get("monitoramento") ? true : false,
+        data_monitoramento: formData.get("data_monitoramento"),
+        situacao_fiscal: formData.get("situacao_fiscal"),
+        observacoes: formData.get("observacoes")
+      };
+
+      let response = await fetch(`/admin/editar_cliente/${clienteData.id}`, {
+        method: "POST",
+        body: JSON.stringify(clienteData),
+        headers: { "Content-Type": "application/json" }
+      });
+
+      let result = await response.json();
+      alert(result.message);
+      carregarClientes();
+      filterRows();
+      let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalEditar"));
+      modal.hide();
+    });
+
+    function getCurrentPage() {
+      let params = new URLSearchParams(window.location.search);
+      return params.get("page") || 1;
+    }
+
+    async function carregarClientes() {
+      let page = getCurrentPage();
+      let response = await fetch(`/admin/clientes_cadastrados?page=${page}`);
+      let data = await response.text();
+      let parser = new DOMParser();
+      let newDoc = parser.parseFromString(data, 'text/html');
+      let newTable = newDoc.getElementById("clientesTable").innerHTML;
+      document.getElementById("clientesTable").innerHTML = newTable;
+    }
+
+
+    document.addEventListener("click", async function (event) {
+      if (event.target.closest(".delete-btn")) {
+        let row = event.target.closest("tr");
+        let id = row.dataset.id;
+        if (confirm(`Tem certeza que deseja excluir o cliente ID ${id}?`)) {
+          let response = await fetch(`/admin/excluir_cliente/${id}`, { method: "POST" });
+          let result = await response.json();
+          alert(result.message);
+          if (result.success) {
+            row.remove();
+          }
+        }
+      }
+    });
+
+    document.addEventListener("click", function (event) {
+      if (event.target.closest(".edit-btn")) {
+        let tr = event.target.closest("tr");
+        let id = tr.dataset.id;
+        let formEditar = document.getElementById("formEditar");
+        formEditar.querySelector('input[name="id"]').value = id;
+        formEditar.nome.value = tr.querySelector(".nome").innerText;
+        formEditar.cnpj.value = tr.querySelector(".cnpj").innerText;
+        formEditar.regime.value = tr.querySelector(".regime").innerText;
+        let dividaText = tr.querySelector(".divida").innerText;
+        formEditar.divida.value = parseFloat(
+          dividaText.replace("R$ ", "").replace(/\./g, "").replace(",", ".")
+        );
+        formEditar.contrato.value = tr.querySelector(".contrato").innerText;
+        formEditar.segmento.value = tr.querySelector(".segmento").innerText;
+
+        // Preencher campos extras do modal de editar
+        formEditar.logradouro.value = tr.dataset.logradouro;
+        formEditar.numero.value = tr.dataset.numero;
+        formEditar.bairro.value = tr.dataset.bairro;
+        formEditar.municipio.value = tr.dataset.municipio;
+        formEditar.email.value = tr.dataset.email;
+        formEditar.telefone.value = tr.dataset.telefone;
+        formEditar.cep.value = tr.dataset.cep;
+
+        // Novos campos
+        let monitoramento = tr.dataset.monitoramento === "True" || tr.dataset.monitoramento === "true" || tr.dataset.monitoramento === "1";
+        formEditar.monitoramento.checked = monitoramento;
+        if (monitoramento) {
+          document.getElementById("divDataMonitoramento_edit").style.display = "block";
+          formEditar.data_monitoramento.value = tr.dataset.data_monitoramento;
+        } else {
+          document.getElementById("divDataMonitoramento_edit").style.display = "none";
+        }
+        formEditar.situacao_fiscal.value = tr.dataset.situacao_fiscal;
+        formEditar.observacoes.value = tr.dataset.observacoes;
+
+        let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalEditar"));
+        modal.show();
+      }
+    });
+
+    document.addEventListener("click", function (event) {
+      if (event.target.closest(".view-btn")) {
+        let tr = event.target.closest("tr");
+        document.getElementById("viewNome").innerText = tr.querySelector(".nome").innerText;
+        document.getElementById("viewCNPJ").innerText = tr.querySelector(".cnpj").innerText;
+        document.getElementById("viewRegime").innerText = tr.querySelector(".regime").innerText;
+        // Removemos Dívida daqui, pois será exibida abaixo de Monitoramento
+        // document.getElementById("viewDivida").innerText = tr.querySelector(".divida").innerText;
+        document.getElementById("viewSituacaoFiscal").innerText = tr.dataset.situacao_fiscal;
+        document.getElementById("viewContrato").innerText = tr.querySelector(".contrato").innerText;
+        document.getElementById("viewSegmento").innerText = tr.querySelector(".segmento").innerText;
+
+        document.getElementById("viewLogradouro").innerText = tr.dataset.logradouro;
+        document.getElementById("viewNumero").innerText = tr.dataset.numero;
+        document.getElementById("viewBairro").innerText = tr.dataset.bairro;
+        document.getElementById("viewMunicipio").innerText = tr.dataset.municipio;
+        document.getElementById("viewEmail").innerText = tr.dataset.email;
+        document.getElementById("viewTelefone").innerText = tr.dataset.telefone;
+        document.getElementById("viewCEP").innerText = tr.dataset.cep;
+
+        // Exibe Monitoramento como "Ativo" ou "Inativo"
+        let monitoramentoDisplay = (tr.dataset.monitoramento === "True" || tr.dataset.monitoramento === "true" || tr.dataset.monitoramento === "1") ? "Ativo" : "Inativo";
+        document.getElementById("viewMonitoramento").innerText = monitoramentoDisplay;
+
+        // Agora exibe Dívida abaixo de Monitoramento
+        document.getElementById("viewDivida").innerText = tr.querySelector(".divida").innerText;
+
+        // Formata a data para o formato DD/MM/YYYY
+        document.getElementById("viewDataMonitoramento").innerText = formatDatePortuguese(tr.dataset.data_monitoramento);
+        document.getElementById("viewObservacoes").innerText = tr.dataset.observacoes;
+
+        let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalVisualizar"));
+        modal.show();
+      }
+    });
+  });
+
+
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel do Cliente</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navbar -->
+    <nav class="bg-gradient-to-r from-blue-800 to-blue-500 shadow text-white">
+        <div class="container mx-auto flex justify-between items-center py-3 px-4">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-user-circle text-2xl"></i>
+                <span class="font-bold text-lg">Portal do Cliente</span>
+            </div>
+            <div class="flex gap-4 items-center">
+                <a href="{{ url_for('cliente.index') }}" class="hover:underline">Dashboard</a>
+                <a href="{{ url_for('cliente.documentos') }}" class="hover:underline">Documentos</a>
+                <a href="{{ url_for('cliente.dividas') }}" class="hover:underline">Dívidas</a>
+                <a href="{{ url_for('cliente.processos') }}" class="hover:underline">Processos</a>
+                <a href="{{ url_for('cliente.perfil') }}" class="hover:underline">Perfil</a>
+                <a href="{{ url_for('auth.cliente_logout') }}" class="ml-4 px-3 py-1 rounded bg-red-600 hover:bg-red-700 transition flex items-center gap-1"><i class="fas fa-sign-out-alt"></i> Sair</a>
+            </div>
+        </div>
+    </nav>
+    <main class="container mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="text-center text-gray-400 py-4 text-sm">
+        © 2024 Patricorp. Todos os direitos reservados.
+    </footer>
+</body>
+</html>

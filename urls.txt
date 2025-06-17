@@ -1,0 +1,13 @@
+URLS principais do projeto
+
+Tela de login	http://127.0.0.1:5000/auth/login
+Tela principal (dashboard/admin)	http://127.0.0.1:5000/admin/
+Clientes cadastrados	http://127.0.0.1:5000/admin/clientes_cadastrados
+Monitoramento de dívida ativa	http://127.0.0.1:5000/admin/divida_ativa
+Monitoramento de dívida municipal	http://127.0.0.1:5000/admin/divida_municipal
+Monitoramento de dívida estadual	http://127.0.0.1:5000/admin/divida_estadual
+Monitoramento de dívida federal	http://127.0.0.1:5000/admin/divida_federal
+Cobrança judicial	http://127.0.0.1:5000/admin/cobranca_judicial
+Estatísticas	http://127.0.0.1:5000/admin/estatistica
+Negociações	http://127.0.0.1:5000/admin/negociacoes
+Notificações	http://127.0.0.1:5000/admin/notificacoes

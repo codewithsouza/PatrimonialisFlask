@@ -1,0 +1,272 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="mb-0">Dashboard Administrativo</h2>
+
+  <div class="dropdown">
+    <a href="#" class="btn btn-outline-primary position-relative dropdown-toggle" role="button"
+      data-bs-toggle="dropdown" aria-expanded="false" id="btnNotificacoes">
+      <i class="fas fa-bell me-2"></i> Notificações
+      <span id="notificacaoBadge"
+        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
+        0
+      </span>
+    </a>
+
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="btnNotificacoes" id="listaNotificacoes"
+      style="min-width: 300px;">
+      <!-- Notificações serão carregadas aqui -->
+      <li>
+        <a class="dropdown-item text-center text-primary fw-bold"
+          href="{{ url_for('notificacoes.notificacoes_index') }}">
+          Ver todas
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <!-- Empresas Gerenciadas -->
+  <div class="col-sm-12 col-md-4">
+    <a href="{{ url_for('admin.clientes_cadastrados') }}" class="text-decoration-none">
+      <div class="card text-white bg-primary border-0 shadow-sm rounded-4" style="min-height: 220px; transition: transform 0.2s;">
+        <div class="card-body d-flex flex-column justify-content-center align-items-center text-center">
+          <i class="fas fa-building fa-2x mb-3"></i>
+          <h5 class="card-title fs-1">{{ total_clientes }}</h5>
+          <p class="card-text fs-5 text-white">Empresas Gerenciadas</p>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Dívida Consolidada -->
+  <div class="col-sm-12 col-md-4">
+    <a href="{{ url_for('admin.divida_ativa') }}" class="text-decoration-none">
+      <div class="card text-white bg-success border-0 shadow-sm rounded-4" style="min-height: 220px; transition: transform 0.2s;">
+        <div class="card-body d-flex flex-column justify-content-center align-items-center text-center">
+          <i class="fas fa-dollar-sign fa-2x mb-3"></i>
+          <h5 class="card-title fs-1">
+            R$ {{ "{:,.2f}".format(total_divida | float).replace(',', 'X').replace('.', ',').replace('X', '.') }}
+          </h5>
+          <p class="card-text fs-5 text-white">Dívida Consolidada</p>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Processos Judiciais -->
+  <div class="col-sm-12 col-md-4">
+     <a href="{{ url_for('admin.cobranca_judicial') }}" class="text-decoration-none">
+    <div class="card text-white bg-danger border-0 shadow-sm rounded-4" style="min-height: 220px; transition: transform 0.2s;">
+      <div class="card-body d-flex flex-column justify-content-center align-items-center text-center">
+        <i class="fas fa-gavel fa-2x mb-3"></i>
+        <h5 class="card-title fs-1">{{ processos_ativos }}</h5>
+        <p class="card-text fs-5">Processos Judiciais Ativos</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Seção de Gráficos -->
+<div class="row g-3 mb-3">
+  <div class="col-sm-12 col-lg-4">
+    <div class="card h-100">
+      <div class="card-body text-center">
+        <h5 class="card-title">Composição da Dívida</h5>
+        <canvas id="graficoPizza" style="max-height: 200px;"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-12 col-lg-4">
+    <div class="card h-100">
+      <div class="card-body text-center">
+        <h5 class="card-title">Status das Dívidas</h5>
+        <canvas id="graficoBarra" style="max-height: 200px;"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-12 col-lg-4">
+    <div class="card h-100">
+      <div class="card-body text-center">
+        <h5 class="card-title">Potencial de Reduções</h5>
+        <canvas id="graficoDonut" style="max-height: 180px;"></canvas>
+        <p class="mt-3 fw-bold">Potencial de Redução Total:<br> R$ 850.000</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Seção de Alertas -->
+<div class="row g-3">
+  <div class="col-sm-12 col-md-6 col-lg-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">Alertas</h5>
+        <ul id="listaAlertas" class="list-group">
+          <li class="list-group-item text-muted small">Carregando...</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  async function carregarGrafico() {
+    const response = await fetch("/admin/api/grafico_dividas");
+    const data = await response.json();
+
+    const ctx = document.getElementById('graficoPizza').getContext('2d');
+    new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: data.labels,
+        datasets: [{
+          data: data.valores,
+          backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545'],
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          }
+        }
+      }
+    });
+  }
+
+  // listar notificações
+  document.addEventListener("DOMContentLoaded", async () => {
+    try {
+      const res = await fetch("/notificacoes/listar");
+      const dados = await res.json();
+      const lista = document.getElementById("listaNotificacoes");
+      const badge = document.getElementById("notificacaoBadge");
+
+      let hoje = new Date();
+      let seteDias = new Date();
+      seteDias.setDate(hoje.getDate() + 7);
+
+      let contador = 0;
+
+      for (const [mes, dias] of Object.entries(dados)) {
+        for (const [dia, eventos] of Object.entries(dias)) {
+          const dataNotificacao = new Date(`${mes}-${String(dia).padStart(2, '0')}`);
+
+          if (dataNotificacao >= hoje && dataNotificacao <= seteDias) {
+            eventos.forEach(evento => {
+              const li = document.createElement("li");
+              li.innerHTML = `
+  <div class="bg-light border rounded p-2 mb-2 shadow-sm" style="max-width: 320px;">
+    <div class="d-flex justify-content-between align-items-start">
+      <div class="me-2" style="font-size: 14px;">
+        ${evento.texto}
+      </div>
+      <div class="d-flex flex-column align-items-end gap-1">
+        <button class="btn btn-sm btn-outline-primary" title="Editar" onclick="editarNotificacao(${evento.id})">
+          <i class="fas fa-pen"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-danger" title="Excluir" onclick="excluirNotificacao(${evento.id})">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+`;
+              lista.insertBefore(li, lista.lastElementChild);
+
+              contador++;
+            });
+          }
+        }
+      }
+
+      if (contador > 0) {
+        badge.classList.remove("d-none");
+        badge.textContent = contador;
+      }
+
+    } catch (e) {
+      console.error("Erro ao buscar notificações:", e);
+    }
+  });
+
+  // carregar notificações no card
+
+  async function carregarAlertasIndex() {
+  const lista = document.getElementById("listaAlertas");
+  lista.innerHTML = "";
+
+  try {
+    const res = await fetch("/notificacoes/listar");
+    const dados = await res.json();
+
+    let hoje = new Date();
+    let seteDias = new Date();
+    seteDias.setDate(hoje.getDate() + 7);
+
+    let encontrou = false;
+
+    for (const [mes, dias] of Object.entries(dados)) {
+      for (const [dia, eventos] of Object.entries(dias)) {
+        const dataNotificacao = new Date(`${mes}-${String(dia).padStart(2, '0')}`);
+        if (dataNotificacao >= hoje && dataNotificacao <= seteDias) {
+          eventos.forEach(evento => {
+            const texto = evento.texto || evento;
+
+            // Extrai [Tipo], Título e Descrição
+            const match = texto.match(/^\[(.*?)\]\s*(.*?)\s*\|\s*(.*)$/);
+            if (!match) return;
+
+            const tipo = match[1];
+            const titulo = match[2];
+            const descricao = match[3];
+
+            let classe = "list-group-item-light";
+            if (tipo === "Alerta") classe = "list-group-item-warning";
+            if (tipo === "Reunião") classe = "list-group-item-info";
+            if (tipo === "Lembrete") classe = "list-group-item-secondary";
+
+            const li = document.createElement("li");
+            li.className = `list-group-item ${classe}`;
+            li.innerHTML = `
+              <div class="d-flex justify-content-between">
+                <div>
+                  <strong>${titulo}</strong><br>
+                  <small class="text-muted">${descricao}</small>
+                </div>
+                <span class="badge bg-dark align-self-start" style="font-size: 0.75rem;">
+                  ${dataNotificacao.toLocaleDateString("pt-BR")}
+                </span>
+              </div>
+            `;
+            lista.appendChild(li);
+            encontrou = true;
+          });
+        }
+      }
+    }
+
+    if (!encontrou) {
+      lista.innerHTML = `<li class="list-group-item text-muted">Sem notificações para esta semana.</li>`;
+    }
+
+  } catch (e) {
+    console.error("Erro ao carregar alertas:", e);
+    lista.innerHTML = `<li class="list-group-item text-danger">Erro ao carregar notificações.</li>`;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", carregarAlertasIndex);
+</script>
+{% endblock %}

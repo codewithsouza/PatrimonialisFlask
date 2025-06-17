@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login do Cliente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .bg-gradient {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex">
+        <!-- Lado esquerdo - Imagem/Background -->
+        <div class="hidden lg:flex lg:w-1/2 bg-gradient items-center justify-center p-12">
+            <div class="max-w-md text-white">
+                <h1 class="text-4xl font-bold mb-6">Bem-vindo ao Portal do Cliente</h1>
+                <p class="text-lg opacity-90 mb-8">
+                    Acesse seus dados, negocie dívidas e acompanhe seus processos de forma simples e segura.
+                </p>
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-xl"></i>
+                        </div>
+                        <span>Área exclusiva do cliente</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-file-invoice-dollar text-xl"></i>
+                        </div>
+                        <span>Negociação de dívidas</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-gavel text-xl"></i>
+                        </div>
+                        <span>Acompanhamento de processos</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lado direito - Formulário de Login -->
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-8">
+            <div class="max-w-md w-full space-y-8">
+                <!-- Logo e Título -->
+                <div>
+                    <div class="flex justify-center">
+                        <div class="w-20 h-20 bg-gradient rounded-2xl flex items-center justify-center shadow-lg">
+                            <i class="fas fa-user text-white text-4xl"></i>
+                        </div>
+                    </div>
+                    <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                        Login do Cliente
+                    </h2>
+                    <p class="mt-2 text-center text-sm text-gray-600">
+                        Ou
+                        <a href="{{ url_for('auth.cliente_cadastro') }}" class="font-medium text-blue-600 hover:text-blue-500">
+                            cadastre-se agora
+                        </a>
+                    </p>
+                </div>
+
+                <!-- Mensagens de erro -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="rounded-md bg-red-50 p-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-exclamation-circle text-red-400"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <ul class="list-disc pl-5 space-y-1 text-sm text-red-700">
+                                        {% for category, message in messages %}
+                                            <li>{{ message }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Formulário -->
+                <form class="mt-8 space-y-6" method="POST" action="{{ url_for('auth.cliente_login') }}">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700">
+                                Email
+                            </label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-envelope text-gray-400"></i>
+                                </div>
+                                <input id="email" name="email" type="email" required 
+                                    class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                                    placeholder="Digite seu email">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="senha" class="block text-sm font-medium text-gray-700">
+                                Senha
+                            </label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-lock text-gray-400"></i>
+                                </div>
+                                <input id="senha" name="senha" type="password" required 
+                                    class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                                    placeholder="Digite sua senha">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <button type="submit" 
+                            class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+                            <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                                <i class="fas fa-sign-in-alt text-blue-200 group-hover:text-white"></i>
+                            </span>
+                            Entrar
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Footer -->
+                <div class="mt-8 text-center text-sm text-gray-600">
+                    <p>© 2024 Patricorp. Todos os direitos reservados.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
