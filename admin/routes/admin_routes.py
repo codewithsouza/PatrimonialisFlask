@@ -237,4 +237,87 @@ def adicionar_cliente():
         return redirect(url_for('admin.clientes_cadastrados'))
     return render_template('admin/adicionar_cliente.html')
 
+@admin_bp.route('/dividas_federais')
+@login_required
+def dividas_federais():
+    # Buscar dívidas federais do usuário logado
+    dividas = Divida.query.filter_by(usuario_id=current_user.id, esfera='Federal').all()
+    clientes = Cliente.query.filter_by(usuario_id=current_user.id, monitoramento=True).all()
+    cliente = clientes[0] if clientes else None
+    valor_total = sum([float(d.valor_total or 0) for d in dividas])
+    tributos = list(set([d.tributo for d in dividas]))
+    valores_tributos = [sum([float(d.valor_total or 0) for d in dividas if d.tributo == t]) for t in tributos]
+    anos_pagamento = list(set([d.ano for d in dividas if d.ano]))
+    valores_pagamento = [sum([float(d.valor_pago or 0) for d in dividas if d.ano == a]) for a in anos_pagamento]
+    periodo = None
+    debug = False
+    return render_template('admin/dividas_federais.html',
+        dividas=dividas,
+        cliente=cliente,
+        valor_total=valor_total,
+        tributos=tributos,
+        valores_tributos=valores_tributos,
+        anos_pagamento=anos_pagamento,
+        valores_pagamento=valores_pagamento,
+        periodo=periodo,
+        debug=debug
+    )
+
+@admin_bp.route('/divida_estadual')
+@login_required
+def divida_estadual():
+    dividas = Divida.query.filter_by(usuario_id=current_user.id, esfera='Estadual').all()
+    clientes = Cliente.query.filter_by(usuario_id=current_user.id, monitoramento=True).all()
+    cliente = clientes[0] if clientes else None
+    total_divida_estadual = sum([float(d.valor_total or 0) for d in dividas])
+    tributos = list(set([d.tributo for d in dividas]))
+    valores_tributos = [sum([float(d.valor_total or 0) for d in dividas if d.tributo == t]) for t in tributos]
+    anos_pagamento = list(set([d.ano for d in dividas if d.ano]))
+    valores_pagamento = [sum([float(d.valor_pago or 0) for d in dividas if d.ano == a]) for a in anos_pagamento]
+    periodo = None
+    # Composição e pagamentos para os gráficos
+    composicao = {t: float(sum([d.valor_total or 0 for d in dividas if d.tributo == t])) for t in tributos}
+    pagamentos = {str(a): float(sum([d.valor_pago or 0 for d in dividas if d.ano == a])) for a in anos_pagamento}
+    return render_template('admin/divida_estadual.html',
+        dividas=dividas,
+        clientes=clientes,
+        cliente=cliente,
+        total_divida_estadual=total_divida_estadual,
+        tributos=tributos,
+        valores_tributos=valores_tributos,
+        anos_pagamento=anos_pagamento,
+        valores_pagamento=valores_pagamento,
+        periodo=periodo,
+        composicao=composicao,
+        pagamentos=pagamentos
+    )
+
+@admin_bp.route('/divida_municipal')
+@login_required
+def divida_municipal():
+    dividas = Divida.query.filter_by(usuario_id=current_user.id, esfera='Municipal').all()
+    clientes = Cliente.query.filter_by(usuario_id=current_user.id, monitoramento=True).all()
+    cliente = clientes[0] if clientes else None
+    total_divida_municipal = sum([float(d.valor_total or 0) for d in dividas])
+    tributos = list(set([d.tributo for d in dividas]))
+    valores_tributos = [sum([float(d.valor_total or 0) for d in dividas if d.tributo == t]) for t in tributos]
+    anos_pagamento = list(set([d.ano for d in dividas if d.ano]))
+    valores_pagamento = [sum([float(d.valor_pago or 0) for d in dividas if d.ano == a]) for a in anos_pagamento]
+    periodo = None
+    composicao = {t: float(sum([d.valor_total or 0 for d in dividas if d.tributo == t])) for t in tributos}
+    pagamentos = {str(a): float(sum([d.valor_pago or 0 for d in dividas if d.ano == a])) for a in anos_pagamento}
+    return render_template('admin/divida_municipal.html',
+        dividas=dividas,
+        clientes=clientes,
+        cliente=cliente,
+        total_divida_municipal=total_divida_municipal,
+        tributos=tributos,
+        valores_tributos=valores_tributos,
+        anos_pagamento=anos_pagamento,
+        valores_pagamento=valores_pagamento,
+        periodo=periodo,
+        composicao=composicao,
+        pagamentos=pagamentos
+    )
+
 # ... (outras rotas do admin serão movidas aqui) 
